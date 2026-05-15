@@ -48,9 +48,9 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/anomalyco/friday"
-Documentation = "https://github.com/anomalyco/friday"
-Repository = "https://github.com/anomalyco/friday"
+Homepage = "https://github.com/M-houres/Friday"
+Documentation = "https://github.com/M-houres/Friday"
+Repository = "https://github.com/M-houres/Friday"
 
 [project.scripts]
 friday-new-app = "src.scaffold.cli:main"

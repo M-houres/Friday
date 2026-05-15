@@ -1,33 +1,123 @@
-# 星期五 (Friday)
+# Friday
 
-> 面向垂直业务应用开发的 AI Agent 底座
+> Build vertical AI applications on a reusable workflow, tool, artifact, and operations backbone.
 
-## 定位
+Friday is an open-source framework for building **complex but bounded AI products**: legal assistants, report generators, internal copilots, approval-driven workflows, multi-page AI workbenches, and similar business applications.
 
-这不是零代码平台，也不应被理解为“一个后台承载很多无关业务”的重平台。
+It is **not** a zero-code platform and it is **not** trying to be an unconstrained general-purpose super agent. The design center is practical product delivery:
 
-更准确的定位是：
+- reusable runtime, auth, billing, workflow, artifact, and sandbox infrastructure
+- deterministic `Skill` workflows first
+- agent orchestration as a fallback, not the default for every task
+- configurable project pages and operations console out of the box
 
-- 复用同一套运行时、编排、鉴权、产物交付、流式事件、沙盒隔离能力
-- 每做一个新业务应用，主要新增三类文件：
-  - `skills/*.py`
-  - `config/skills/*.json`
-  - `static/*.html`
-- 同时建议维护 `config/projects/*.json`，用于产品级页面导航、应用分组和展示元数据
+## Why Friday
 
-一句话：**复用底座，快速装配新的垂直 AI 应用。**
+Most AI app teams do not want to rebuild the same foundation for every new product:
 
-## 当前执行模型
+- login and account bootstrap
+- model routing and streaming output
+- workflow execution and status tracking
+- artifact generation and controlled downloads
+- approval steps and async jobs
+- admin and ops configuration surfaces
 
-项目已经收口到 `Workflow First, Agent Optional`：
+Friday turns those into a shared base layer, so a new application usually means building:
 
-- 命中 Skill 的任务，优先走确定性 `skill_pipeline`
-- 只有未命中 Skill 或需要通用拆解时，才走 Agent DAG
-- 这比“所有任务都丢给多 Agent 猜怎么做”更稳定，也更适合商业化垂直场景
+- a new `Skill`
+- a new frontend page
+- a new manifest/config entry
 
-## 现在如何新增一个业务应用
+## What It Is Good At
 
-### 方式一：直接生成骨架
+Friday is a strong fit for:
+
+- multi-step AI workflows with clear business boundaries
+- AI products that generate deliverables such as reports, markdown, JSON, PPT, or files
+- internal workbenches with multiple pages, task history, and operations tooling
+- human-in-the-loop products with approvals, retries, and async execution
+- vertical domain apps such as legal, content, knowledge, analysis, or operations assistants
+
+Friday is a weaker fit for:
+
+- highly autonomous open-ended agents running for hours or days
+- large-scale multi-agent team simulation
+- ERP-grade transactional core systems
+- real-time collaborative systems where AI is only one small subsystem
+
+## Architecture Direction
+
+Friday follows a simple principle:
+
+**Workflow First, Agent Optional**
+
+- If a task matches a known business `Skill`, run the deterministic `skill_pipeline`
+- If a task does not match or needs broader decomposition, fall back to agent DAG orchestration
+
+This keeps production behavior more stable than pushing every request into a free-form agent loop.
+
+## Core Capabilities
+
+- Skill-first execution model
+- Agent DAG fallback orchestration
+- FastAPI API and static page mounting
+- per-workflow SSE stream channel
+- sandboxed execution with workflow ownership
+- managed artifact generation and download
+- project and skill manifest auto-discovery
+- login, account bootstrap, rate limiting, and auth modes
+- async jobs, approvals, and operations endpoints
+- model routing, retries, and circuit breakers
+
+## Project Layout
+
+```text
+app.py                    # app entrypoint and auto-discovery bootstrap
+src/                      # core runtime, APIs, orchestration, tools, models
+skills/                   # vertical business skills
+static/                   # frontend pages
+config/skills/            # skill manifests
+config/projects/          # project/page manifests
+scripts/new_app.py        # scaffold a new vertical app
+```
+
+## Quick Start
+
+### 1. Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### 2. Start infrastructure
+
+```bash
+docker compose up -d
+```
+
+### 3. Configure environment
+
+```bash
+copy config/.env.example config/.env
+```
+
+Fill in the model and runtime settings you actually want to use.
+
+### 4. Run the app
+
+```bash
+python app.py
+```
+
+Default entrypoints:
+
+- panel: `http://localhost:8000/panel`
+- API docs: `http://localhost:8000/docs`
+- business pages: auto-mounted from project and skill manifests
+
+## Create a New AI App
+
+Generate a scaffold:
 
 ```bash
 python scripts/new_app.py contract_review ^
@@ -39,7 +129,7 @@ python scripts/new_app.py contract_review ^
   --create-project-config
 ```
 
-生成后会得到：
+This generates:
 
 ```text
 skills/contract_review_skill.py
@@ -48,119 +138,65 @@ config/skills/contract_review.json
 config/projects/legal_suite.json
 ```
 
-然后你只需要做三件事：
+In practice, most new apps only require:
 
-1. 在 `skills/contract_review_skill.py` 里替换业务逻辑
-2. 在 `static/contract-review.html` 里替换页面展示
-3. 按需补产物交付、外部 API、鉴权策略
+1. implementing the business logic in `skills/*.py`
+2. building the scenario UI in `static/*.html`
+3. wiring project and skill metadata in `config/projects` and `config/skills`
 
-### 方式二：自己按约定新增文件
+## How Friday Extends
 
-运行时会自动发现并装配：
+### Skill
 
-- `skills/*.py`
-- `config/skills/*.json`
-- `static/*.html`
-- `config/projects/*.json`
+A `Skill` is the vertical business entrypoint. It usually defines:
 
-不需要改 `app.py`。
+- trigger matching
+- workflow steps
+- tool execution
+- result shaping for the frontend
 
-## 核心装配约定
+### Skill Manifest
 
-### 1. Skill
+`config/skills/<app>.json` declares route, page, execution mode, visibility, and artifact type.
 
-Skill 是垂直业务主入口，负责：
+### Project Manifest
 
-- 触发词匹配
-- 业务 workflow 声明
-- 工具执行
-- 前端交付结构收口
+`config/projects/*.json` describes product-level pages, grouping, navigation, and page scenarios.
 
-建议把 Skill 写成“确定性业务流水线”，不要默认依赖通用 Agent 自由发挥。
+### Frontend Page
 
-### 2. Skill Manifest
+`static/*.html` pages are mounted automatically. A page may map to one skill, many skills, or a scenario pipeline.
 
-`config/skills/<app>.json` 用于声明：
+## Development Model
 
-- 路由
-- 页面文件
-- 执行模式
-- 可见性
-- 产物类型
+Recommended delivery sequence for a new vertical AI product:
 
-示例：
+1. scaffold the app
+2. make the Skill workflow run end-to-end
+3. connect artifacts, external APIs, or knowledge sources
+4. polish page UX and streaming feedback
+5. add approval, billing, and ops behaviors if needed
 
-```json
-{
-  "kind": "skill_manifest",
-  "skill_name": "合同审查助手",
-  "project_id": "legal_suite",
-  "route": "/contract-review",
-  "page": "contract-review.html",
-  "execution_mode": "skill_pipeline",
-  "visibility": "public",
-  "artifact_kind": "markdown"
-}
-```
+## Current Status
 
-### 3. 前端页面
+The project is already usable as a **first production-capable AI application base**, especially for vertical workflow-driven products.
 
-`static/*.html` 由 `app.py` 自动挂载。
+Recent hardening includes:
 
-页面不需要和 Skill 一一对应。更合理的关系是：
+- persistent artifact metadata
+- sandbox registry and recovery
+- Redis-backed SSE cross-process bridging with local fallback
+- bootstrap-only DB schema initialization
+- full regression suite passing
 
-- 一个业务产品有多个页面
-- 一个业务产品有多个 Skill
-- 一个页面可以绑定一个或多个 Skill
-- 首页、历史页、介绍页可以不直接绑定单个 Skill
-- 某些页面还可以直接声明一个 `scenario`，由后端按顺序执行多个 Skill
+## Docs
 
-页面默认可以调用：
-
-- `POST /api/v1/workflows`
-- `GET /api/v1/workflows/{workflow_id}`
-- `GET /api/v1/stream/{workflow_id}`
-- `GET /api/v1/artifacts/{artifact_id}`
-- `GET /api/v1/artifacts/{artifact_id}/download`
-
-## 关键能力
-
-- 产品级多页面装配
-- Skill 优先编排
-- Agent DAG 回退路径
-- 每个 workflow 独立 SSE 通道
-- workflow 级 sandbox 归属
-- 受控 artifact 下载，不再直接暴露静态文件
-- 项目/应用 manifest 自动发现
-- FastAPI API + 静态页面一体装配
-
-## 启动
-
-```bash
-docker compose up -d
-pip install -r requirements.txt
-python -m src.db init
-python app.py
-```
-
-默认入口：
-
-- 面板：`/panel`
-- API 文档：`/docs`
-- 业务页面：按 manifest `route` 自动挂载
-
-## 推荐开发路径
-
-做一个新垂直应用时，优先按这个顺序推进：
-
-1. 先生成骨架
-2. 先把 Skill workflow 跑通
-3. 再接文件交付、知识库、外部系统
-4. 最后优化页面体验和实时反馈
-
-## 相关文档
-
-- [INTEGRATION.md](./INTEGRATION.md)
 - [API.md](./API.md)
+- [INTEGRATION.md](./INTEGRATION.md)
+- [ARCHITECTURE.md](./ARCHITECTURE.md)
 - [docs/architecture-v2.md](./docs/architecture-v2.md)
 - [docs/implementation-plan-v2.md](./docs/implementation-plan-v2.md)
+
+## License
+
+MIT
