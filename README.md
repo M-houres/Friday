@@ -2,6 +2,8 @@
 
 > Build vertical AI applications on a reusable workflow, tool, artifact, and operations backbone.
 
+[English](./README.md) | [简体中文](./README.zh-CN.md)
+
 Friday is an open-source framework for building **complex but bounded AI products**: legal assistants, report generators, internal copilots, approval-driven workflows, multi-page AI workbenches, and similar business applications.
 
 It is **not** a zero-code platform and it is **not** trying to be an unconstrained general-purpose super agent. The design center is practical product delivery:
