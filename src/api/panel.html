@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>星期五 v1.0 -- AI 产品运营控制台</title>
+<style>
+:root{
+  --bg:#f4efe7;
+  --bg-soft:#fbf8f2;
+  --surface:#fffdfa;
+  --surface-strong:#fff;
+  --line:#dbcfc0;
+  --line-soft:#ebe2d6;
+  --text:#1f1b16;
+  --muted:#706457;
+  --accent:#b45309;
+  --accent-soft:#fff2dd;
+  --green:#0f766e;
+  --red:#b42318;
+  --blue:#155eef;
+  --gold:#ca8a04;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"Avenir Next","PingFang SC","Microsoft YaHei",sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top right, rgba(180,83,9,.09), transparent 24%),
+    linear-gradient(180deg, #f8f3eb 0%, #f4efe7 100%);
+  min-height:100vh;
+}
+a{color:inherit;text-decoration:none}
+.layout{display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+.sidebar{
+  border-right:1px solid var(--line);
+  background:rgba(255,250,244,.92);
+  backdrop-filter:blur(10px);
+  position:sticky;
+  top:0;
+  height:100vh;
+  padding:22px 16px;
+  overflow-y:auto;
+}
+.brand{
+  padding:8px 12px 18px;
+  border-bottom:1px solid var(--line-soft);
+  margin-bottom:16px;
+}
+.brand h1{font-size:21px;letter-spacing:.02em}
+.brand p{margin-top:6px;color:var(--muted);font-size:12px;line-height:1.6}
+.sidebar-section{margin:18px 0 10px;padding:0 12px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em}
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:4px 0;
+  padding:12px 14px;
+  border-radius:14px;
+  color:var(--muted);
+  cursor:pointer;
+  transition:all .16s ease;
+  border:1px solid transparent;
+}
+.nav-item:hover{background:var(--surface);border-color:var(--line-soft);color:var(--text)}
+.nav-item.active{
+  background:linear-gradient(135deg, #fff7eb 0%, #fff 100%);
+  border-color:#f0d7b4;
+  color:var(--text);
+  box-shadow:0 10px 24px rgba(154, 91, 24, .08);
+}
+.nav-icon{width:22px;text-align:center;font-size:15px}
+.nav-copy{display:flex;flex-direction:column;gap:3px}
+.nav-copy strong{font-size:13px;font-weight:650}
+.nav-copy span{font-size:11px;color:var(--muted)}
+.sidebar-note{
+  margin-top:18px;
+  padding:14px;
+  border-radius:16px;
+  background:var(--surface);
+  border:1px solid var(--line-soft);
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.7;
+}
+.main{padding:28px 30px 44px}
+.hero{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+  align-items:flex-start;
+  padding:28px;
+  border-radius:24px;
+  background:
+    linear-gradient(135deg, rgba(180,83,9,.12), rgba(255,255,255,.8)),
+    var(--surface);
+  border:1px solid #ead7be;
+  box-shadow:0 18px 48px rgba(64,42,17,.08);
+  margin-bottom:22px;
+}
+.hero h2{font-size:28px;line-height:1.2}
+.hero p{margin-top:10px;max-width:720px;color:var(--muted);line-height:1.8;font-size:14px}
+.hero-meta{
+  min-width:240px;
+  display:grid;
+  gap:12px;
+}
+.hero-chip{
+  padding:12px 14px;
+  border-radius:16px;
+  background:rgba(255,255,255,.75);
+  border:1px solid var(--line-soft);
+}
+.hero-chip .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.hero-chip .value{margin-top:4px;font-size:16px;font-weight:700}
+.page{display:none}
+.page.active{display:block}
+.section-title{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:16px;
+  margin:0 0 18px;
+}
+.section-title h3{font-size:24px}
+.section-title p{color:var(--muted);font-size:13px;line-height:1.6;max-width:720px}
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+  gap:14px;
+  margin-bottom:20px;
+}
+.stat-card,.card{
+  background:rgba(255,253,250,.96);
+  border:1px solid var(--line-soft);
+  border-radius:20px;
+  box-shadow:0 10px 24px rgba(46,31,16,.05);
+}
+.stat-card{padding:18px}
+.stat-card .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+.stat-card .value{margin-top:8px;font-size:28px;font-weight:750}
+.stat-card .hint{margin-top:6px;color:var(--muted);font-size:12px}
+.accent{color:var(--accent)}
+.green{color:var(--green)}
+.red{color:var(--red)}
+.blue{color:var(--blue)}
+.gold{color:var(--gold)}
+.stack{display:grid;gap:16px}
+.card{padding:18px}
+.card h4{font-size:15px;margin-bottom:12px}
+.card-sub{margin-top:-4px;margin-bottom:14px;color:var(--muted);font-size:12px;line-height:1.7}
+.grid-2{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.list{display:grid;gap:10px}
+.list-row{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+  padding:12px 0;
+  border-bottom:1px solid var(--line-soft);
+}
+.list-row:last-child{border-bottom:none;padding-bottom:0}
+.list-row:first-child{padding-top:0}
+.meta{color:var(--muted);font-size:12px;line-height:1.6}
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:4px 9px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:700;
+  background:#f4ece2;
+  color:var(--muted);
+}
+.badge.ok{background:rgba(15,118,110,.12);color:var(--green)}
+.badge.warn{background:rgba(202,138,4,.14);color:var(--gold)}
+.badge.err{background:rgba(180,35,24,.12);color:var(--red)}
+.badge.info{background:rgba(21,94,239,.12);color:var(--blue)}
+.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line-soft);text-align:left;vertical-align:top}
+th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+tr:hover td{background:rgba(249,242,231,.45)}
+.mono{font-family:Consolas,"SFMono-Regular",monospace}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.btn{
+  appearance:none;
+  border:none;
+  border-radius:12px;
+  padding:10px 14px;
+  cursor:pointer;
+  font-size:13px;
+  font-weight:650;
+  background:#efe5d8;
+  color:var(--text);
+  transition:all .15s ease;
+}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-danger{background:#fce9e7;color:var(--red)}
+.btn-ghost{background:transparent;border:1px solid var(--line)}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.form-grid-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.form-group{display:grid;gap:6px}
+.form-group label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+input,select,textarea{
+  width:100%;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:var(--surface-strong);
+  color:var(--text);
+  font:inherit;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#d7a86e;box-shadow:0 0 0 3px rgba(180,83,9,.12)}
+textarea{min-height:110px;resize:vertical}
+.empty{
+  padding:22px;
+  border-radius:16px;
+  background:var(--bg-soft);
+  border:1px dashed var(--line);
+  color:var(--muted);
+  line-height:1.8;
+  font-size:13px;
+}
+.code{
+  padding:14px;
+  border-radius:16px;
+  background:#1f1b16;
+  color:#f7f2ea;
+  font-family:Consolas,"SFMono-Regular",monospace;
+  font-size:12px;
+  white-space:pre-wrap;
+  max-height:360px;
+  overflow:auto;
+}
+.pill-grid{display:flex;gap:8px;flex-wrap:wrap}
+.pill{
+  padding:8px 12px;
+  border-radius:999px;
+  background:var(--bg-soft);
+  border:1px solid var(--line-soft);
+  font-size:12px;
+}
+.roadmap{
+  display:grid;
+  gap:10px;
+}
+.roadmap-item{
+  padding:14px 16px;
+  border-radius:16px;
+  border:1px solid var(--line-soft);
+  background:linear-gradient(180deg, rgba(255,255,255,.95), rgba(249,245,238,.9));
+}
+.roadmap-item strong{display:block;margin-bottom:5px}
+.footer-note{margin-top:18px;color:var(--muted);font-size:12px;line-height:1.7}
+.toast{
+  position:fixed;
+  top:16px;
+  right:16px;
+  padding:12px 14px;
+  border-radius:14px;
+  background:#1f1b16;
+  color:#fff;
+  font-size:13px;
+  z-index:999;
+  box-shadow:0 12px 30px rgba(0,0,0,.22);
+}
+.auth-shell{
+  min-height:100vh;
+  display:grid;
+  place-items:center;
+  padding:24px;
+}
+.auth-card{
+  width:min(960px,100%);
+  display:grid;
+  grid-template-columns:1.05fr .95fr;
+  border-radius:28px;
+  overflow:hidden;
+  background:rgba(255,253,250,.98);
+  border:1px solid #ead7be;
+  box-shadow:0 24px 60px rgba(64,42,17,.12);
+}
+.auth-hero{
+  padding:36px;
+  background:
+    radial-gradient(circle at top right, rgba(180,83,9,.18), transparent 28%),
+    linear-gradient(160deg, #fff6ea 0%, #f7efe3 100%);
+  border-right:1px solid var(--line-soft);
+}
+.auth-hero h2{font-size:32px;line-height:1.2}
+.auth-hero p{margin-top:12px;color:var(--muted);line-height:1.8}
+.auth-panel{padding:30px}
+.auth-tabs{display:flex;gap:10px;margin-bottom:16px}
+.auth-tab{flex:1}
+.auth-note{margin-top:14px;color:var(--muted);font-size:12px;line-height:1.7}
+@media (max-width: 1080px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:static;height:auto}
+  .main{padding:20px}
+  .hero{flex-direction:column}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .auth-card{grid-template-columns:1fr}
+  .auth-hero{border-right:none;border-bottom:1px solid var(--line-soft)}
+}
+@media (max-width: 720px){
+  .form-grid,.form-grid-3{grid-template-columns:1fr}
+  .main{padding:16px}
+  .hero{padding:20px}
+  .hero h2{font-size:24px}
+}
+</style>
+</head>
+<body>
+<div id="auth-screen" class="auth-shell" style="display:none">
+  <div class="auth-card">
+    <div class="auth-hero">
+      <div class="badge info">运营后台登录</div>
+      <h2 style="margin-top:16px">星期五管理运营后台</h2>
+      <p>这里不是页面生成器，而是你这个 AI 应用底座的通用控制层。登录后可统一管理账号、支付权益、模型策略、项目装配和运营配置。</p>
+      <div class="roadmap" style="margin-top:18px">
+        <div class="roadmap-item"><strong>账号通用层</strong> 注册、登录、改密、角色。</div>
+        <div class="roadmap-item"><strong>商业化通用层</strong> 套餐、订单、额度、补偿。</div>
+        <div class="roadmap-item"><strong>应用装配通用层</strong> 项目、页面、Skill 绑定、计费、场景步骤。</div>
+      </div>
+    </div>
+    <div class="auth-panel">
+      <div class="auth-tabs">
+        <button id="tab-login" class="btn btn-primary auth-tab" onclick="switchAuthTab('login')">登录</button>
+        <button id="tab-register" class="btn auth-tab" onclick="switchAuthTab('register')">注册</button>
+      </div>
+      <div id="auth-bootstrap-note" class="card-sub">加载中...</div>
+
+      <div id="auth-login-form">
+        <div class="form-grid">
+          <div class="form-group"><label>Email</label><input id="login-email" placeholder="admin@example.com"></div>
+          <div class="form-group"><label>密码</label><input id="login-password" type="password" placeholder="至少 8 位"></div>
+        </div>
+        <div class="toolbar" style="margin-top:16px">
+          <button class="btn btn-primary" onclick="submitLogin()">登录后台</button>
+        </div>
+      </div>
+
+      <div id="auth-register-form" style="display:none">
+        <div class="form-grid">
+          <div class="form-group"><label>昵称</label><input id="register-name" placeholder="管理员"></div>
+          <div class="form-group"><label>Email</label><input id="register-email" placeholder="admin@example.com"></div>
+          <div class="form-group"><label>密码</label><input id="register-password" type="password" placeholder="至少 8 位"></div>
+          <div class="form-group"><label>确认密码</label><input id="register-password-confirm" type="password" placeholder="再次输入密码"></div>
+        </div>
+        <div class="toolbar" style="margin-top:16px">
+          <button class="btn btn-primary" onclick="submitRegister()">注册并进入后台</button>
+        </div>
+      </div>
+      <div class="auth-note">开发环境下可直接访问这个登录页。生产环境请配置真实 `JWT_SECRET`，并只开放正式域名。</div>
+    </div>
+  </div>
+</div>
+
+<div id="panel-app" style="display:none">
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>星期五 · Ops</h1>
+      <p>面向单个 C 端 AI 产品的运营控制台。围绕用户、付费、任务交付、内容配置与模型成本来经营应用。</p>
+      <div class="toolbar" style="margin-top:12px">
+        <button class="btn btn-ghost" onclick="logoutPanel()">退出登录</button>
+      </div>
+    </div>
+
+    <div class="sidebar-section">运营主线</div>
+    <div class="nav-item active" data-page="overview">
+      <div class="nav-icon">📈</div>
+      <div class="nav-copy"><strong>经营总览</strong><span>看增长、交付和成本</span></div>
+    </div>
+    <div class="nav-item" data-page="users">
+      <div class="nav-icon">👥</div>
+      <div class="nav-copy"><strong>用户运营</strong><span>用户状态、角色与补偿</span></div>
+    </div>
+    <div class="nav-item" data-page="billing">
+      <div class="nav-icon">💳</div>
+      <div class="nav-copy"><strong>支付与权益</strong><span>订阅、点数与订单位</span></div>
+    </div>
+    <div class="nav-item" data-page="tasks">
+      <div class="nav-icon">🧾</div>
+      <div class="nav-copy"><strong>任务与结果</strong><span>任务队列、审批与交付</span></div>
+    </div>
+    <div class="nav-item" data-page="content">
+      <div class="nav-icon">🪄</div>
+      <div class="nav-copy"><strong>功能与内容</strong><span>页面、模板、知识库</span></div>
+    </div>
+    <div class="nav-item" data-page="models">
+      <div class="nav-icon">🧠</div>
+      <div class="nav-copy"><strong>模型与成本</strong><span>效果、成本、降级</span></div>
+    </div>
+
+    <div class="sidebar-section">经营增强</div>
+    <div class="nav-item" data-page="growth">
+      <div class="nav-icon">🚀</div>
+      <div class="nav-copy"><strong>增长运营</strong><span>新手引导、活动、转化</span></div>
+    </div>
+    <div class="nav-item" data-page="support">
+      <div class="nav-icon">🛡</div>
+      <div class="nav-copy"><strong>客服与风控</strong><span>审批、申诉、审核队列</span></div>
+    </div>
+    <div class="nav-item" data-page="system">
+      <div class="nav-icon">⚙</div>
+      <div class="nav-copy"><strong>系统设置</strong><span>健康状态与配置快照</span></div>
+    </div>
+
+    <div class="sidebar-note">
+      当前这版先把有后端支撑的数据与动作接实：
+      用户、支付权益、任务、审批、结果、模板、知识库、模型状态已经可用。
+      增长和风控保留明确结构位，后续再按业务接表与接口。
+    </div>
+  </aside>
+
+  <main class="main">
+    <section class="hero">
+      <div>
+        <h2>AI 产品运营控制台</h2>
+        <p>这不是技术面板，而是面向 C 端单应用经营的控制面。运营在这里看用户、任务、内容与成本；产品在这里调模板、知识库和页面流程；管理员在这里做审批、配置和版本治理。</p>
+      </div>
+      <div class="hero-meta">
+        <div class="hero-chip">
+          <div class="label">当前定位</div>
+          <div class="value">单应用 C 端运营后台</div>
+        </div>
+        <div class="hero-chip">
+          <div class="label">底层能力</div>
+          <div class="value">Workflow / Skill / Template / Knowledge</div>
+        </div>
+        <div class="hero-chip">
+          <div class="label">建议分层</div>
+          <div class="value">运营控制台 / 内部工程控制台分离</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-overview" class="page active">
+      <div class="section-title">
+        <div>
+          <h3>经营总览</h3>
+          <p>聚焦用户规模、交付量、待审批任务与模型成本。这里优先回答“今天这个 AI 产品跑得怎么样”，不是回答底层线程和 Redis 状态。</p>
+        </div>
+      </div>
+      <div class="stats-grid" id="overview-stats"></div>
+      <div class="grid-2">
+        <div class="stack">
+          <div class="card">
+            <h4>最近任务交付</h4>
+            <div class="card-sub">结合异步任务与结果记录，快速看近几次用户交付是否顺畅。</div>
+            <div id="overview-jobs"></div>
+          </div>
+          <div class="card">
+            <h4>最近结果记录</h4>
+            <div class="card-sub">运营关注用户最终拿到什么，而不是只看工作流内部节点。</div>
+            <div id="overview-results"></div>
+          </div>
+        </div>
+        <div class="stack">
+          <div class="card">
+            <h4>待处理审批</h4>
+            <div class="card-sub">适合客服、审核、法务或人工复核场景。</div>
+            <div id="overview-approvals"></div>
+          </div>
+          <div class="card">
+            <h4>当前应用配置面</h4>
+            <div class="card-sub">应用路由、场景入口与 Skill 概况，方便理解当前产品面貌。</div>
+            <div id="overview-projects"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-users" class="page">
+      <div class="section-title">
+        <div>
+          <h3>用户运营</h3>
+          <p>围绕用户状态、角色、补偿与人工运营动作。对 C 端应用来说，这里应该服务拉新后续的留存、恢复与客诉处理。</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h4>新增 / 更新用户</h4>
+          <div class="card-sub">当前底座已支持用户、角色和状态。后续可在这里继续挂用户权益、订阅与额度。</div>
+          <div class="form-grid">
+            <div class="form-group"><label>用户 ID</label><input id="user-id" placeholder="user-001"></div>
+            <div class="form-group"><label>昵称 / 姓名</label><input id="user-name" placeholder="新用户"></div>
+            <div class="form-group"><label>Email</label><input id="user-email" placeholder="user@example.com"></div>
+            <div class="form-group"><label>角色</label><input id="user-roles" placeholder="admin,operator,builder"></div>
+            <div class="form-group"><label>状态</label><select id="user-status"><option value="active">active</option><option value="disabled">disabled</option></select></div>
+            <div class="form-group"><label>运营备注(JSON)</label><input id="user-metadata" placeholder='{"source":"campaign"}'></div>
+          </div>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="saveUser()">保存用户</button>
+            <button class="btn btn-ghost" onclick="resetUserForm()">清空表单</button>
+          </div>
+        </div>
+        <div class="card">
+          <h4>用户运营提示</h4>
+          <div class="roadmap">
+            <div class="roadmap-item"><strong>已支持</strong> 用户、角色、状态、基础备注。</div>
+            <div class="roadmap-item"><strong>下一步建议</strong> 接入订阅状态、权益余额、最近支付与任务表现。</div>
+            <div class="roadmap-item"><strong>最终目标</strong> 让运营能直接做补偿、封禁、白名单和用户分层。</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>用户列表</h4>
+          <div class="card-sub">用户、订阅和额度会一起展示，方便运营直接做补偿、识别高价值用户和排查投诉。</div>
+        <div id="users-list"></div>
+      </div>
+      <div class="grid-2" style="margin-top:16px">
+        <div class="card">
+          <h4>权益流水</h4>
+          <div class="card-sub">发放、扣减、退款、补偿全部留痕，避免运营只看到余额看不到过程。</div>
+          <div id="users-ledger"></div>
+        </div>
+        <div class="card">
+          <h4>操作审计</h4>
+          <div class="card-sub">所有后台动作都需要可追溯，尤其是封禁、补偿、退款和任务干预。</div>
+          <div id="users-audit"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-billing" class="page">
+      <div class="section-title">
+        <div>
+          <h3>支付与权益</h3>
+          <p>这里承接 C 端 AI 应用最基础的商业化对象：套餐、订单和用户权益。当前先做运营可配置的第一阶段，让后台能配套餐、记订单、看额度。</p>
+        </div>
+      </div>
+      <div class="stats-grid" id="billing-stats"></div>
+      <div class="grid-3">
+        <div class="card">
+          <h4>套餐中心</h4>
+          <div class="card-sub">订阅、次数包、点数包都可以抽象成套餐。当前支持基础字段与特性标签。</div>
+          <div class="form-grid">
+            <div class="form-group"><label>套餐名称</label><input id="plan-name" placeholder="月度会员"></div>
+            <div class="form-group"><label>类型</label><select id="plan-type"><option value="subscription">subscription</option><option value="credits">credits</option><option value="one_time">one_time</option></select></div>
+            <div class="form-group"><label>价格(分)</label><input id="plan-price" type="number" value="0"></div>
+            <div class="form-group"><label>币种</label><input id="plan-currency" value="CNY"></div>
+            <div class="form-group"><label>周期</label><input id="plan-interval" value="month"></div>
+            <div class="form-group"><label>附带额度</label><input id="plan-credits" type="number" value="0"></div>
+            <div class="form-group"><label>状态</label><select id="plan-status"><option value="active">active</option><option value="inactive">inactive</option></select></div>
+            <div class="form-group"><label>特性</label><input id="plan-features" placeholder="high_quality,priority_queue"></div>
+            <div class="form-group" style="grid-column:1 / -1"><label>Metadata(JSON)</label><input id="plan-metadata" placeholder='{"channel":"ios"}'></div>
+          </div>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="savePlan()">保存套餐</button>
+            <button class="btn btn-ghost" onclick="resetPlanForm()">清空表单</button>
+          </div>
+          <div id="billing-plans" style="margin-top:16px"></div>
+        </div>
+        <div class="card">
+          <h4>订单与支付</h4>
+          <div class="card-sub">当前支持手动录入订单与到账状态，后续可接支付回调与退款流。</div>
+          <div class="form-grid">
+            <div class="form-group"><label>用户 ID</label><input id="order-user" placeholder="user-001"></div>
+            <div class="form-group"><label>套餐 ID</label><input id="order-plan" placeholder="可空，填套餐 ID"></div>
+            <div class="form-group"><label>订单类型</label><select id="order-type"><option value="subscription">subscription</option><option value="credits">credits</option><option value="manual_adjustment">manual_adjustment</option></select></div>
+            <div class="form-group"><label>金额(分)</label><input id="order-amount" type="number" value="0"></div>
+            <div class="form-group"><label>状态</label><select id="order-status"><option value="pending">pending</option><option value="paid">paid</option><option value="refunded">refunded</option><option value="failed">failed</option></select></div>
+            <div class="form-group"><label>渠道</label><input id="order-provider" placeholder="wechat / stripe"></div>
+            <div class="form-group"><label>渠道订单号</label><input id="order-provider-id" placeholder="第三方订单号"></div>
+            <div class="form-group"><label>额度增量</label><input id="order-credits" type="number" value="0"></div>
+            <div class="form-group" style="grid-column:1 / -1"><label>订单备注(JSON)</label><input id="order-detail" placeholder='{"campaign":"618"}'></div>
+          </div>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="saveOrder()">保存订单</button>
+            <button class="btn btn-ghost" onclick="resetOrderForm()">清空表单</button>
+          </div>
+          <div id="billing-orders" style="margin-top:16px"></div>
+        </div>
+        <div class="card">
+          <h4>用户权益</h4>
+          <div class="card-sub">先把订阅状态和额度维持起来，后面再接自动扣减与过期逻辑。</div>
+          <div class="form-grid">
+            <div class="form-group"><label>用户 ID</label><input id="ent-user" placeholder="user-001"></div>
+            <div class="form-group"><label>激活套餐 ID</label><input id="ent-plan" placeholder="套餐 ID"></div>
+            <div class="form-group"><label>订阅状态</label><select id="ent-status"><option value="inactive">inactive</option><option value="trial">trial</option><option value="active">active</option><option value="expired">expired</option></select></div>
+            <div class="form-group"><label>当前余额</label><input id="ent-balance" type="number" value="0"></div>
+            <div class="form-group"><label>累计发放</label><input id="ent-granted" type="number" value="0"></div>
+            <div class="form-group"><label>累计消耗</label><input id="ent-used" type="number" value="0"></div>
+            <div class="form-group" style="grid-column:1 / -1"><label>权益备注(JSON)</label><input id="ent-metadata" placeholder='{"operator":"ops"}'></div>
+          </div>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="saveEntitlement()">保存权益</button>
+            <button class="btn btn-ghost" onclick="resetEntitlementForm()">清空表单</button>
+          </div>
+          <div id="billing-entitlements" style="margin-top:16px"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>当前阶段说明</h4>
+        <div class="roadmap">
+          <div class="roadmap-item"><strong>已落地</strong> 套餐、订单、用户权益三类经营对象都已可在后台维护。</div>
+          <div class="roadmap-item"><strong>下一步建议</strong> 在用户中心接入订阅状态摘要，在任务中心接入付费任务和额度扣减关联。</div>
+          <div class="roadmap-item"><strong>后续扩展</strong> 再补支付回调、退款流、优惠券、试用赠送与续费提醒。</div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>权益流水</h4>
+        <div class="card-sub">把发放、扣减、退款、人工补偿统一成台账，运营查账时不再只能看最终余额。</div>
+        <div id="billing-ledger"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>支付回调处理</h4>
+        <div class="card-sub">用于人工补录或联调第三方支付回调，把订单推进到真实到账状态。</div>
+        <div class="form-grid">
+          <div class="form-group"><label>支付渠道</label><input id="callback-provider" placeholder="wechat / stripe"></div>
+          <div class="form-group"><label>内部订单 ID</label><input id="callback-order-id" placeholder="order-xxx"></div>
+          <div class="form-group"><label>渠道订单号</label><input id="callback-provider-order" placeholder="wx_123"></div>
+          <div class="form-group"><label>金额(分)</label><input id="callback-amount" type="number" value="0"></div>
+          <div class="form-group" style="grid-column:1 / -1"><label>回调载荷(JSON)</label><input id="callback-payload" placeholder='{"trade_state":"SUCCESS"}'></div>
+        </div>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn btn-primary" onclick="processManualCallback()">处理回调</button>
+        </div>
+        <div id="billing-callbacks" style="margin-top:16px"></div>
+      </div>
+    </section>
+
+    <section id="page-tasks" class="page">
+      <div class="section-title">
+        <div>
+          <h3>任务与结果</h3>
+          <p>这里是当前框架最成熟的一层。把工作流、异步作业、审批和结果记录统一成“用户任务交付中心”，而不是散乱的技术视图。</p>
+        </div>
+      </div>
+      <div class="card">
+        <h4>筛选</h4>
+        <div class="form-grid-3">
+          <div class="form-group"><label>任务状态</label><input id="task-filter-status" placeholder="queued / running / completed"></div>
+          <div class="form-group"><label>用户 ID</label><input id="task-filter-user" placeholder="u1"></div>
+          <div class="form-group"><label>项目 / 页面</label><input id="task-filter-project" placeholder="default / legal-briefing"></div>
+        </div>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn btn-primary" onclick="loadTasks()">刷新任务视图</button>
+        </div>
+      </div>
+      <div class="stats-grid" id="task-stats"></div>
+      <div class="stack">
+        <div class="card">
+          <h4>工作流与异步作业</h4>
+          <div id="task-workflows"></div>
+        </div>
+        <div class="card">
+          <h4>审批队列</h4>
+          <div id="task-approvals"></div>
+        </div>
+        <div class="card">
+          <h4>结果记录</h4>
+          <div id="task-results"></div>
+        </div>
+        <div class="card">
+          <h4>任务操作审计</h4>
+          <div id="task-audit"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-content" class="page">
+      <div class="section-title">
+        <div>
+          <h3>功能与内容</h3>
+          <p>这是面向 C 端 AI 应用最重要的可运营区：页面入口、场景流程、Skill 能力、Prompt 模板和知识库都应围绕“调效果、调交付”来组织。</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h4>当前应用入口</h4>
+          <div class="card-sub">这里展示当前应用有哪些页面、每个页面背后串了哪些 Skill 和场景步骤。现在已经可以直接在后台改项目与页面配置并写回配置文件。</div>
+          <div id="content-projects"></div>
+        </div>
+        <div class="card">
+          <h4>Skill 能力清单</h4>
+          <div class="card-sub">Skill 是能力模块，通常保持在代码里稳定演进；运营更常改的是模板和知识库。</div>
+          <div id="content-skills"></div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top:16px">
+        <div class="card">
+          <h4>项目 / 页面装配</h4>
+          <div class="card-sub">这里只管理应用装配信息：项目元数据、路由、页面模板文件、页面到 Skill 的绑定、计费和场景步骤。前端页面文件和 Skill 代码仍然是定制开发。</div>
+          <div class="form-grid">
+            <div class="form-group"><label>项目 ID</label><input id="project-id" placeholder="default"></div>
+            <div class="form-group"><label>项目名称</label><input id="project-name" placeholder="Friday Default Project"></div>
+            <div class="form-group"><label>首页路由</label><input id="project-home-route" placeholder="/"></div>
+            <div class="form-group"><label>项目 Skills</label><input id="project-skills" placeholder="一秒PPT,法务审查"></div>
+            <div class="form-group" style="grid-column:1 / -1"><label>项目描述</label><input id="project-description" placeholder="应用描述"></div>
+          </div>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="saveProjectManifest()">保存项目</button>
+            <button class="btn btn-danger" onclick="deleteCurrentProject()">删除项目</button>
+            <button class="btn btn-ghost" onclick="resetProjectForm()">清空项目表单</button>
+          </div>
+          <div class="card-sub" style="margin-top:16px">页面装配</div>
+          <div class="form-grid">
+            <div class="form-group"><label>页面 ID</label><input id="page-id" placeholder="landing"></div>
+            <div class="form-group"><label>页面名称</label><input id="page-name" placeholder="营销首页"></div>
+            <div class="form-group"><label>访问路由</label><input id="page-route" placeholder="/landing"></div>
+            <div class="form-group"><label>页面文件</label><input id="page-file" placeholder="landing.html"></div>
+            <div class="form-group"><label>导航标题</label><input id="page-nav-label" placeholder="首页"></div>
+            <div class="form-group"><label>图标</label><input id="page-icon" placeholder="🏠"></div>
+            <div class="form-group"><label>绑定 Skills</label><input id="page-skills" placeholder="一秒PPT,法务审查"></div>
+            <div class="form-group"><label>可见性</label><select id="page-visibility"><option value="public">public</option><option value="private">private</option></select></div>
+            <div class="form-group"><label>设为首页</label><select id="page-is-home"><option value="false">false</option><option value="true">true</option></select></div>
+            <div class="form-group"><label>计费配置(JSON)</label><input id="page-billing" placeholder='{"required":true,"credits_cost":10}'></div>
+            <div class="form-group" style="grid-column:1 / -1"><label>页面描述</label><input id="page-description" placeholder="页面用途说明"></div>
+          </div>
+          <div class="form-group" style="margin-top:12px"><label>场景步骤(JSON)</label><textarea id="page-scenario" placeholder='{"steps":[{"id":"step_1","name":"生成","skill":"一秒PPT"}],"result_mode":"merge"}'></textarea></div>
+          <div class="toolbar">
+            <button class="btn btn-primary" onclick="saveProjectPage()">保存页面</button>
+            <button class="btn btn-danger" onclick="deleteCurrentPage()">删除页面</button>
+            <button class="btn btn-ghost" onclick="resetPageForm()">清空页面表单</button>
+          </div>
+        </div>
+        <div class="card">
+          <h4>Prompt 模板</h4>
+          <div class="card-sub">可作为运营调效果的主战场，当前已支持保存、筛选与编辑。</div>
+          <div class="form-grid">
+            <div class="form-group"><label>模板名称</label><input id="tpl-name" placeholder="首页欢迎词"></div>
+            <div class="form-group"><label>分类</label><input id="tpl-category" placeholder="growth / legal / summary"></div>
+            <div class="form-group"><label>作用范围</label><select id="tpl-scope"><option value="project">project</option><option value="page">page</option><option value="global">global</option></select></div>
+            <div class="form-group"><label>项目 ID</label><input id="tpl-project" placeholder="default"></div>
+            <div class="form-group"><label>变量</label><input id="tpl-vars" placeholder="user_name,task"></div>
+            <div class="form-group"><label>Metadata(JSON)</label><input id="tpl-metadata" placeholder='{"tone":"friendly"}'></div>
+          </div>
+          <div class="form-group" style="margin-top:12px"><label>模板内容</label><textarea id="tpl-content" placeholder="请根据 {{task}} 生成结果"></textarea></div>
+          <div class="toolbar">
+            <button class="btn btn-primary" onclick="saveTemplate()">保存模板</button>
+            <button class="btn btn-ghost" onclick="resetTemplateForm()">清空表单</button>
+          </div>
+          <div style="margin-top:16px" id="templates-list"></div>
+        </div>
+        <div class="card">
+          <h4>知识库</h4>
+          <div class="card-sub">适合放品牌口径、领域规范、FAQ、政策摘要等会明显影响模型输出质量的材料。</div>
+          <div class="form-grid">
+            <div class="form-group"><label>标题</label><input id="kg-title" placeholder="品牌语气规范"></div>
+            <div class="form-group"><label>项目 ID</label><input id="kg-project" placeholder="default"></div>
+            <div class="form-group"><label>类型</label><input id="kg-type" placeholder="policy / note / faq"></div>
+            <div class="form-group"><label>标签</label><input id="kg-tags" placeholder="brand,faq"></div>
+            <div class="form-group" style="grid-column:1 / -1"><label>Metadata(JSON)</label><input id="kg-metadata" placeholder='{"source":"ops"}'></div>
+          </div>
+          <div class="form-group" style="margin-top:12px"><label>内容</label><textarea id="kg-content" placeholder="这里填写给模型参考的知识内容"></textarea></div>
+          <div class="toolbar">
+            <button class="btn btn-primary" onclick="saveKnowledge()">保存文档</button>
+            <button class="btn btn-ghost" onclick="resetKnowledgeForm()">清空表单</button>
+          </div>
+          <div style="margin-top:16px" id="knowledge-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-models" class="page">
+      <div class="section-title">
+        <div>
+          <h3>模型与成本</h3>
+          <p>对于 C 端 AI 应用，这里要解决两个矛盾：效果要稳定，成本不能失控。现在除了看状态和成本，也可以直接维护默认模型、复杂度路由和页面级策略。</p>
+        </div>
+      </div>
+      <div class="stats-grid" id="model-stats"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h4>提供商与熔断状态</h4>
+          <div id="model-providers"></div>
+        </div>
+        <div class="card">
+          <h4>成本快照</h4>
+          <div id="model-cost"></div>
+        </div>
+      </div>
+      <div class="grid-2" style="margin-top:16px">
+        <div class="card">
+          <h4>策略摘要</h4>
+          <div class="card-sub">这里展示当前生效的默认模型、快速模型、复杂度路由和页面级策略数量。</div>
+          <div id="model-strategy-summary"></div>
+        </div>
+        <div class="card">
+          <h4>模型策略配置</h4>
+          <div class="card-sub">保存后会直接写入仓库内配置文件，新的工作流会按这里的规则选模型和回退链路。</div>
+          <div class="form-grid">
+            <div class="form-group"><label>默认模型</label><input id="model-default-model" placeholder="deepseek-chat"></div>
+            <div class="form-group"><label>快速模型</label><input id="model-fast-model" placeholder="gpt-4o-mini"></div>
+            <div class="form-group"><label>复杂度路由</label><select id="model-routing-enabled"><option value="true">enabled</option><option value="false">disabled</option></select></div>
+          </div>
+          <div class="form-group" style="margin-top:12px"><label>复杂度映射(JSON)</label><textarea id="model-complexity-overrides" placeholder='{"simple":"deepseek-chat","complex":"gpt-4o"}'></textarea></div>
+          <div class="form-group" style="margin-top:12px"><label>回退链映射(JSON)</label><textarea id="model-fallback-map" placeholder='{"gpt-4o":"gpt-4o-mini"}'></textarea></div>
+          <div class="form-group" style="margin-top:12px"><label>页面级策略(JSON)</label><textarea id="model-page-strategies" placeholder='[{"project_id":"default","page_id":"home","model":"gpt-4o","fast_model":"gpt-4o-mini"}]'></textarea></div>
+          <div class="toolbar">
+            <button class="btn btn-primary" onclick="saveModelStrategy()">保存策略</button>
+            <button class="btn btn-ghost" onclick="loadModels()">重新载入</button>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>策略接入建议</h4>
+        <div class="roadmap">
+          <div class="roadmap-item"><strong>免费用户</strong> 默认便宜模型，超时或高峰时优先降级。</div>
+          <div class="roadmap-item"><strong>付费用户</strong> 功能级绑定更强模型，保底回退链路独立配置。</div>
+          <div class="roadmap-item"><strong>功能维度</strong> 对高价值页面单独配模型策略，而不是全站一个默认值。</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="page-growth" class="page">
+      <div class="section-title">
+        <div>
+          <h3>增长运营</h3>
+          <p>这一层先落最实用的两类经营对象：优惠券和试用赠送。它们直接连到权益体系，能支撑拉新、召回、补偿和活动转化。</p>
+        </div>
+      </div>
+      <div class="stats-grid" id="growth-stats"></div>
+      <div class="grid-2">
+        <div class="card">
+          <h4>优惠券配置</h4>
+          <div class="card-sub">当前先支持赠送额度型券码，适合活动发放、客服补偿和召回唤醒。</div>
+          <div class="form-grid">
+            <div class="form-group"><label>券码</label><input id="coupon-code" placeholder="WELCOME100"></div>
+            <div class="form-group"><label>名称</label><input id="coupon-name" placeholder="新用户欢迎券"></div>
+            <div class="form-group"><label>赠送额度</label><input id="coupon-credits" type="number" value="0"></div>
+            <div class="form-group"><label>最大领取数</label><input id="coupon-max" type="number" value="0"></div>
+            <div class="form-group"><label>状态</label><select id="coupon-status"><option value="active">active</option><option value="inactive">inactive</option></select></div>
+            <div class="form-group"><label>Metadata(JSON)</label><input id="coupon-metadata" placeholder='{"campaign":"618"}'></div>
+          </div>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="saveCoupon()">保存优惠券</button>
+            <button class="btn btn-ghost" onclick="resetCouponForm()">清空表单</button>
+          </div>
+          <div class="card-sub" style="margin-top:16px">手动发券 / 代领</div>
+          <div class="form-grid">
+            <div class="form-group"><label>用户 ID</label><input id="coupon-user" placeholder="user-001"></div>
+            <div class="form-group"><label>券码</label><input id="coupon-redeem-code" placeholder="WELCOME100"></div>
+          </div>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="redeemCoupon()">为用户发放</button>
+          </div>
+          <div id="growth-coupons" style="margin-top:16px"></div>
+        </div>
+        <div class="card">
+          <h4>试用赠送</h4>
+          <div class="card-sub">运营可直接给新用户或召回用户发试用额度，全部进入权益流水。</div>
+          <div class="form-grid">
+            <div class="form-group"><label>用户 ID</label><input id="trial-user" placeholder="user-001"></div>
+            <div class="form-group"><label>试用额度</label><input id="trial-credits" type="number" value="0"></div>
+            <div class="form-group" style="grid-column:1 / -1"><label>赠送原因</label><input id="trial-reason" placeholder="新用户试用 / 客服补偿"></div>
+          </div>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="saveTrialGrant()">发放试用</button>
+            <button class="btn btn-ghost" onclick="resetTrialForm()">清空表单</button>
+          </div>
+          <div id="growth-trials" style="margin-top:16px"></div>
+        </div>
+      </div>
+      <div class="footer-note">下一轮再往上补邀请码、渠道归因、活动漏斗和 A/B 实验；但这一轮开始，增长至少已经不是纯结构位了。</div>
+    </section>
+
+    <section id="page-support" class="page">
+      <div class="section-title">
+        <div>
+          <h3>客服与风控</h3>
+          <p>这一层先落工单和申诉。这样用户投诉、退款争议、封禁申诉和结果异常，都有可追踪的承接入口。</p>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <h4>人工审核队列</h4>
+          <div id="support-approvals"></div>
+        </div>
+        <div class="card">
+          <h4>客服工单</h4>
+          <div class="card-sub">适合接投诉、退款、结果异常、账号问题和人工协助。</div>
+          <div class="form-grid">
+            <div class="form-group"><label>用户 ID</label><input id="ticket-user" placeholder="user-001"></div>
+            <div class="form-group"><label>类型</label><input id="ticket-type" placeholder="refund / result_issue"></div>
+            <div class="form-group"><label>标题</label><input id="ticket-title" placeholder="结果异常需处理"></div>
+            <div class="form-group"><label>优先级</label><select id="ticket-priority"><option value="normal">normal</option><option value="high">high</option><option value="urgent">urgent</option></select></div>
+            <div class="form-group" style="grid-column:1 / -1"><label>详情(JSON)</label><input id="ticket-detail" placeholder='{"workflow_id":"wf-1"}'></div>
+          </div>
+          <div class="toolbar" style="margin-top:14px">
+            <button class="btn btn-primary" onclick="saveTicket()">创建工单</button>
+          </div>
+          <div id="support-tickets" style="margin-top:16px"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>用户申诉</h4>
+        <div class="card-sub">封禁申诉、退款争议、审核驳回申诉都统一进入这里。</div>
+        <div class="form-grid">
+          <div class="form-group"><label>用户 ID</label><input id="appeal-user" placeholder="user-001"></div>
+          <div class="form-group"><label>类型</label><input id="appeal-type" placeholder="ban / refund / moderation"></div>
+          <div class="form-group"><label>标题</label><input id="appeal-title" placeholder="封禁申诉"></div>
+          <div class="form-group"><label>关联资源类型</label><input id="appeal-resource-type" placeholder="workflow / payment_order"></div>
+          <div class="form-group"><label>关联资源 ID</label><input id="appeal-resource-id" placeholder="wf-1 / order-1"></div>
+          <div class="form-group" style="grid-column:1 / -1"><label>申诉详情(JSON)</label><input id="appeal-detail" placeholder='{"message":"请复核"}'></div>
+        </div>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn btn-primary" onclick="saveAppeal()">创建申诉</button>
+        </div>
+        <div id="support-appeals" style="margin-top:16px"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>风险案件</h4>
+        <div class="card-sub">把高风险用户、敏感输出、退款争议和异常行为收拢为可处理案件。</div>
+        <div class="form-grid">
+          <div class="form-group"><label>用户 ID</label><input id="risk-user" placeholder="user-001"></div>
+          <div class="form-group"><label>案件类型</label><input id="risk-type" placeholder="abuse / refund / moderation"></div>
+          <div class="form-group"><label>标题</label><input id="risk-title" placeholder="疑似滥用额度"></div>
+          <div class="form-group"><label>严重级别</label><select id="risk-severity"><option value="medium">medium</option><option value="high">high</option><option value="critical">critical</option></select></div>
+          <div class="form-group"><label>关联资源类型</label><input id="risk-resource-type" placeholder="workflow / payment_order"></div>
+          <div class="form-group"><label>关联资源 ID</label><input id="risk-resource-id" placeholder="wf-1 / order-1"></div>
+          <div class="form-group" style="grid-column:1 / -1"><label>详情(JSON)</label><input id="risk-detail" placeholder='{"reason":"burst usage"}'></div>
+        </div>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn btn-primary" onclick="saveRiskCase()">创建案件</button>
+        </div>
+        <div id="support-risk-cases" style="margin-top:16px"></div>
+      </div>
+    </section>
+
+    <section id="page-system" class="page">
+      <div class="section-title">
+        <div>
+          <h3>系统设置</h3>
+          <p>这里不放开发者调试细节，只放运营真正需要关心的应用健康、基础配置与当前运行快照。现在这里的系统配置已经是可保存、可发布、可回滚的受管文件。</p>
+        </div>
+      </div>
+      <div class="grid-3">
+        <div class="card"><h4>应用健康</h4><div id="system-health"></div></div>
+        <div class="card"><h4>执行状态</h4><div id="system-runtime"></div></div>
+        <div class="card"><h4>配置快照</h4><div id="system-config-summary"></div></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>受管系统配置</h4>
+        <div class="card-sub">这部分配置写入仓库内系统配置文件，适合运营维护站点标识、默认项目、支持邮箱和业务开关。</div>
+        <div class="form-grid">
+          <div class="form-group"><label>站点名称</label><input id="system-site-name" placeholder="星期五"></div>
+          <div class="form-group"><label>品牌副标题</label><input id="system-brand-subtitle" placeholder="AI 产品运营控制台"></div>
+          <div class="form-group"><label>时区</label><input id="system-timezone" placeholder="Asia/Shanghai"></div>
+          <div class="form-group"><label>语言</label><input id="system-language" placeholder="zh-CN"></div>
+          <div class="form-group"><label>支持邮箱</label><input id="system-support-email" placeholder="ops@example.com"></div>
+          <div class="form-group"><label>默认项目 ID</label><input id="system-default-project" placeholder="default"></div>
+          <div class="form-group"><label>计费币种</label><input id="system-billing-currency" placeholder="CNY"></div>
+          <div class="form-group"><label>运营公告</label><input id="system-ops-notice" placeholder="今天有活动"></div>
+        </div>
+        <div class="form-group" style="margin-top:12px"><label>功能开关(JSON)</label><textarea id="system-feature-flags" placeholder='{"growth_enabled":true,"support_enabled":true}'></textarea></div>
+        <div class="form-group" style="margin-top:12px"><label>Metadata(JSON)</label><textarea id="system-metadata" placeholder='{"owner":"ops"}'></textarea></div>
+        <div class="toolbar">
+          <button class="btn btn-primary" onclick="saveSystemConfig()">保存系统配置</button>
+          <button class="btn btn-ghost" onclick="loadSystem()">重新载入</button>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>配置详情</h4>
+        <div class="code" id="system-config"></div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h4>配置发布 / 回滚</h4>
+        <div class="card-sub">模板、知识库、系统配置和模型策略都可以发布快照并回滚，避免内容或策略误改后无路可退。</div>
+        <div class="form-grid">
+          <div class="form-group"><label>发布类型</label><select id="release-type" onchange="syncReleaseTargetId()"><option value="template">template</option><option value="knowledge">knowledge</option><option value="system_config">system_config</option><option value="model_strategy">model_strategy</option></select></div>
+          <div class="form-group"><label>目标 ID</label><input id="release-target-id" placeholder="template-id / document-id / global"></div>
+          <div class="form-group"><label>版本标签</label><input id="release-version" placeholder="v20260514-1"></div>
+          <div class="form-group"><label>变更说明</label><input id="release-note" placeholder="调整品牌口径"></div>
+        </div>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn btn-primary" onclick="publishConfigRelease()">发布快照</button>
+        </div>
+        <div id="system-releases" style="margin-top:16px"></div>
+      </div>
+      <div class="footer-note">建议后续把工程向页面整体迁移到 `/internal/dev`，例如 sandbox、stream、topics、DLQ、memory 内部视图等。</div>
+    </section>
+  </main>
+</div>
+</div>
+
+<div id="toast-root"></div>
+
+<script src="/static/panel/common.js"></script>
+<script src="/static/panel/app.js"></script>
+</body>
+</html>
+

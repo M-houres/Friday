@@ -1,0 +1,18 @@
+{
+  "kind": "project",
+  "id": "__PROJECT_ID__",
+  "name": "__PROJECT_NAME__",
+  "description": "__PROJECT_DESCRIPTION__",
+  "skills": ["__APP_NAME__"],
+  "pages": [
+    {
+      "id": "__APP_ID__",
+      "name": "__APP_NAME__",
+      "route": "__APP_ROUTE__",
+      "page": "__APP_PAGE__",
+      "skills": ["__APP_NAME__"],
+      "description": "__APP_DESCRIPTION__",
+      "nav_label": "__APP_NAME__"
+    }
+  ]
+}

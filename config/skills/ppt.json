@@ -1,0 +1,10 @@
+{
+  "kind": "skill_manifest",
+  "skill_name": "一秒PPT",
+  "project_id": "default",
+  "route": "/ppt",
+  "page": "ppt.html",
+  "execution_mode": "skill_pipeline",
+  "visibility": "public",
+  "artifact_kind": "pptx"
+}

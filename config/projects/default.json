@@ -1,0 +1,67 @@
+{
+  "kind": "project",
+  "id": "default",
+  "name": "Friday Default Project",
+  "description": "Built-in Friday demo product with multiple pages and shared AI skills",
+  "home_route": "/",
+  "skills": ["一秒PPT", "法务审查"],
+  "pages": [
+    {
+      "id": "home",
+      "name": "产品首页",
+      "route": "/",
+      "page": "index.html",
+      "skills": [],
+      "description": "默认产品首页，展示功能入口和页面导航",
+      "nav_label": "首页",
+      "icon": "🏠",
+      "is_home": true
+    },
+    {
+      "id": "ppt",
+      "name": "一秒PPT",
+      "route": "/ppt",
+      "page": "ppt.html",
+      "skills": ["一秒PPT"],
+      "description": "从主题到PPTX交付的生成页面",
+      "nav_label": "PPT生成",
+      "icon": "📊"
+    },
+    {
+      "id": "legal",
+      "name": "法务审查",
+      "route": "/legal",
+      "page": "legal.html",
+      "skills": ["法务审查"],
+      "description": "合同和协议文本的风险审查页面",
+      "nav_label": "法务审查",
+      "icon": "⚖️"
+    },
+    {
+      "id": "legal-briefing",
+      "name": "法务汇报包",
+      "route": "/legal-briefing",
+      "page": "legal-briefing.html",
+      "skills": ["法务审查", "一秒PPT"],
+      "description": "先审查合同，再自动生成适合汇报的PPT材料",
+      "nav_label": "法务汇报包",
+      "icon": "🧾",
+      "scenario": {
+        "steps": [
+          {
+            "id": "legal_review",
+            "name": "合同法务审查",
+            "skill": "法务审查"
+          },
+          {
+            "id": "briefing_ppt",
+            "name": "生成汇报PPT",
+            "skill": "一秒PPT",
+            "task_template": "基于以下法务审查结论，生成一份管理层汇报PPT：\n\n{{result:legal_review}}"
+          }
+        ],
+        "result_mode": "merge"
+      }
+    }
+  ]
+}

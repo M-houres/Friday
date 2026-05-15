@@ -1,0 +1,19 @@
+{
+  "kind": "system_config",
+  "version": 1,
+  "site_name": "星期五",
+  "brand_subtitle": "AI 产品运营控制台",
+  "timezone": "Asia/Shanghai",
+  "language": "zh-CN",
+  "support_email": "",
+  "default_project_id": "default",
+  "billing_currency": "CNY",
+  "ops_notice": "",
+  "feature_flags": {
+    "billing_enabled": true,
+    "growth_enabled": true,
+    "support_enabled": true,
+    "approvals_enabled": true
+  },
+  "metadata": {}
+}

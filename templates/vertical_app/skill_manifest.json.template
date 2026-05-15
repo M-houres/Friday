@@ -1,0 +1,10 @@
+{
+  "kind": "skill_manifest",
+  "skill_name": "__APP_NAME__",
+  "project_id": "__PROJECT_ID__",
+  "route": "__APP_ROUTE__",
+  "page": "__APP_PAGE__",
+  "execution_mode": "skill_pipeline",
+  "visibility": "__VISIBILITY__",
+  "artifact_kind": "__ARTIFACT_KIND__"
+}

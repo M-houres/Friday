@@ -1,0 +1,10 @@
+{
+  "kind": "skill_manifest",
+  "skill_name": "法务审查",
+  "project_id": "default",
+  "route": "/legal",
+  "page": "legal.html",
+  "execution_mode": "skill_pipeline",
+  "visibility": "public",
+  "artifact_kind": "markdown"
+}

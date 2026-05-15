@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>一秒PPT —— AI智能生成器</title>
+<style>
+:root{
+--bg:#0a0a0f;--surface:#12121a;--border:#1e1e30;--text:#e8e8f0;--muted:#8888a0;
+--primary:#4f6ef6;--primary-glow:rgba(79,110,246,.3);--success:#22c55e;--success-bg:rgba(34,197,94,.1);
+--warning:#f59e0b;--error:#ef4444;--error-bg:rgba(239,68,68,.1);
+--gradient:linear-gradient(135deg,#4f6ef6,#a855f7,#4f6ef6);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(79,110,246,.08),transparent 60%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(168,85,247,.05),transparent 60%);pointer-events:none;z-index:0}
+
+.container{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:40px 24px 80px}
+.header{text-align:center;padding:40px 0 20px}
+.logo{font-size:52px;margin-bottom:8px;display:block;filter:drop-shadow(0 0 24px var(--primary-glow))}
+h1{font-size:34px;font-weight:800;letter-spacing:-.5px;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% auto;animation:shimmer 3s linear infinite}
+@keyframes shimmer{to{background-position:200% center}}
+.subtitle{color:var(--muted);font-size:15px;margin-top:8px;font-weight:400}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;backdrop-filter:blur(10px);transition:border-color .3s,box-shadow .3s}
+.card:hover{border-color:rgba(79,110,246,.3);box-shadow:0 0 40px rgba(79,110,246,.06)}
+.card-header{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+
+.topic-input-wrap{display:flex;gap:12px;align-items:center}
+.topic-input{flex:1;background:var(--bg);border:2px solid var(--border);border-radius:12px;padding:14px 18px;color:var(--text);font-size:16px;font-family:inherit;outline:none;transition:border-color .3s,box-shadow .3s}
+.topic-input:focus{border-color:var(--primary);box-shadow:0 0 0 4px rgba(79,110,246,.12)}
+.topic-input::placeholder{color:var(--muted)}
+.btn-submit{background:var(--gradient);background-size:200% auto;color:#fff;border:none;border-radius:12px;padding:14px 32px;font-size:16px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .3s;position:relative;overflow:hidden}
+.btn-submit:hover{transform:translateY(-1px);box-shadow:0 8px 28px var(--primary-glow)}
+.btn-submit:active{transform:translateY(0)}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none;animation:none}
+
+.suggestions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.suggestion{padding:6px 14px;background:rgba(79,110,246,.08);border:1px solid rgba(79,110,246,.15);border-radius:20px;font-size:12px;color:var(--primary);cursor:pointer;transition:all .2s}
+.suggestion:hover{background:rgba(79,110,246,.18);border-color:var(--primary)}
+
+.progress-hidden{display:none}
+.progress-visible{display:block}
+.progress-bar-wrap{height:6px;background:var(--border);border-radius:3px;margin-bottom:16px;overflow:hidden}
+.progress-bar{height:100%;background:var(--gradient);background-size:200% auto;border-radius:3px;transition:width .5s ease;animation:shimmer 2s linear infinite}
+.progress-text{font-size:13px;color:var(--muted);margin-bottom:8px;display:flex;justify-content:space-between}
+.steps-list{display:flex;flex-direction:column;gap:8px;max-height:300px;overflow-y:auto}
+.step-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(30,30,48,.4);border-radius:10px;font-size:14px;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}
+.step-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.step-icon.pending{background:rgba(136,136,160,.1);color:var(--muted)}
+.step-icon.running{background:rgba(79,110,246,.15);color:var(--primary);animation:pulse 1.5s ease infinite}
+.step-icon.done{background:var(--success-bg);color:var(--success)}
+.step-icon.error{background:var(--error-bg);color:var(--error)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.step-name{flex:1;font-size:13px}
+.step-status{font-size:12px;color:var(--muted)}
+
+.result-hidden{display:none}
+.result-visible{display:block}
+.result-summary{padding:16px 20px;background:var(--success-bg);border:1px solid rgba(34,197,94,.2);border-radius:12px;margin-bottom:16px;font-size:15px;line-height:1.6;color:var(--success)}
+.download-area{text-align:center;padding:10px 0}
+.btn-download{display:inline-flex;align-items:center;gap:8px;background:var(--success);color:#000;border:none;border-radius:12px;padding:16px 40px;font-size:17px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .3s}
+.btn-download:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(34,197,94,.3)}
+.outline-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;margin-top:16px}
+.outline-card{padding:12px 16px;background:rgba(30,30,48,.4);border-radius:10px;border:1px solid var(--border);font-size:13px}
+.outline-card .num{color:var(--primary);font-weight:700;font-size:12px;margin-bottom:4px}
+
+.error-msg{padding:16px 20px;background:var(--error-bg);border:1px solid rgba(239,68,68,.2);border-radius:12px;color:var(--error);font-size:14px;margin-top:16px;display:none}
+.error-msg.show{display:block}
+
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.toast{position:fixed;top:20px;right:20px;z-index:100;padding:12px 20px;border-radius:10px;font-size:14px;animation:slideIn .3s ease;display:none}
+.toast.show{display:block}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+.toast.success{background:#065f46;color:#a7f3d0;border:1px solid #059669}
+.toast.error{background:#7f1d1d;color:#fca5a5;border:1px solid #dc2626}
+
+.footer{text-align:center;padding:40px 0 20px;color:var(--muted);font-size:12px}
+.footer .dot{color:var(--success)}
+.powered{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(30,30,48,.4);border-radius:20px;font-size:12px}
+.powered strong{color:var(--primary)}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <span class="logo">📊</span>
+    <h1>一秒PPT</h1>
+    <p class="subtitle">AI全自动 —— 输入主题，10页专业PPT即刻生成</p>
+  </div>
+
+  <!-- 输入区 -->
+  <div class="card" id="input-card">
+    <div class="card-header">✨ 输入主题</div>
+    <div class="topic-input-wrap">
+      <input class="topic-input" id="topic-input" type="text" placeholder="例如：2025年人工智能行业趋势分析" maxlength="200" autocomplete="off">
+      <button class="btn-submit" id="btn-submit" onclick="submitTask()">
+        <span id="btn-text">生成PPT</span>
+        <span class="spinner" id="btn-spinner" style="display:none"></span>
+      </button>
+    </div>
+    <div class="suggestions">
+      <span class="suggestion" onclick="setTopic('2025年人工智能行业趋势分析')">AI行业趋势</span>
+      <span class="suggestion" onclick="setTopic('新能源汽车市场竞品分析报告')">新能源车分析</span>
+      <span class="suggestion" onclick="setTopic('企业数字化转型实施策略')">数字化转型</span>
+      <span class="suggestion" onclick="setTopic('短视频营销获客全攻略')">短视频营销</span>
+      <span class="suggestion" onclick="setTopic('Python编程入门培训教程')">Python教程</span>
+    </div>
+  </div>
+
+  <!-- 进度区 -->
+  <div class="card" id="progress-card" style="display:none">
+    <div class="card-header">⚡ 实时进度</div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+    <div class="progress-text">
+      <span id="progress-label">准备中...</span>
+      <span id="progress-percent">0%</span>
+    </div>
+    <div class="steps-list" id="steps-list"></div>
+  </div>
+
+  <!-- 结果区 -->
+  <div class="card" id="result-card" style="display:none">
+    <div class="card-header">📦 交付物</div>
+    <div id="result-content"></div>
+  </div>
+
+  <!-- 错误区 -->
+  <div class="error-msg" id="error-msg"></div>
+</div>
+
+<div class="footer">
+  <span class="powered">Powered by <strong>星期五</strong> AI Agent Framework <span class="dot">●</span> v1.0</span>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '/api/v1';
+const STEPS_CONFIG = [
+  {id:'research',name:'🔬 主题研究',desc:'收集关键信息与数据'},
+  {id:'outline',name:'📋 大纲设计',desc:'规划10页逻辑结构'},
+  {id:'slides',name:'📝 内容生成',desc:'并行撰写全部页面'},
+  {id:'assemble',name:'🎨 PPTX组装',desc:'专业排版与样式'},
+  {id:'certify',name:'✅ 质量校验',desc:'格式与内容检查'},
+  {id:'finalize',name:'📦 交付准备',desc:'生成下载链接'},
+];
+
+let _currentWorkflowId = null;
+let _es = null;
+let _pollTimer = null;
+
+function setTopic(t){document.getElementById('topic-input').value=t;submitTask()}
+
+function setLoading(loading){
+  const btn=document.getElementById('btn-submit');
+  const text=document.getElementById('btn-text');
+  const spinner=document.getElementById('btn-spinner');
+  btn.disabled=loading;
+  text.style.display=loading?'none':'inline';
+  spinner.style.display=loading?'inline-block':'none';
+}
+
+function showProgress(){
+  document.getElementById('progress-card').style.display='block';
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('error-msg').classList.remove('show');
+  const stepsList=document.getElementById('steps-list');
+  stepsList.innerHTML=STEPS_CONFIG.map(s=>
+    `<div class="step-item" id="step-${s.id}">
+      <span class="step-icon pending" id="step-icon-${s.id}">○</span>
+      <span class="step-name">${s.name}</span>
+      <span class="step-status" id="step-status-${s.id}">${s.desc}</span>
+    </div>`
+  ).join('');
+}
+
+function updateStep(stepIndex,status){
+  const step=STEPS_CONFIG[stepIndex];
+  if(!step)return;
+  const icon=document.getElementById('step-icon-'+step.id);
+  const statusEl=document.getElementById('step-status-'+step.id);
+  if(!icon||!statusEl)return;
+
+  icon.className='step-icon '+status;
+  if(status==='running'){icon.textContent='◉';statusEl.textContent='执行中...'}
+  else if(status==='done'){icon.textContent='✔';statusEl.textContent='完成'}
+  else if(status==='error'){icon.textContent='✕';statusEl.textContent='失败'}
+  else{icon.textContent='○';statusEl.textContent=step.desc}
+}
+
+function updateProgress(percent,label){
+  document.getElementById('progress-bar').style.width=percent+'%';
+  document.getElementById('progress-percent').textContent=percent+'%';
+  document.getElementById('progress-label').textContent=label||'处理中...';
+}
+
+function showResult(data){
+  document.getElementById('progress-card').style.display='none';
+  document.getElementById('result-card').style.display='block';
+  const container=document.getElementById('result-content');
+
+  const topic=data.topic||'';
+  const filename=data.filename||'output.pptx';
+  const sizeKb=data.file_size_kb||0;
+  const slidesCount=data.slides_count||0;
+  const url=data.download_url||'';
+  const summary=data.summary||'';
+  const outline=data.slide_outline||[];
+  const quality=data.quality_check||'PASS';
+
+  let html='';
+  if(summary){
+    html+=`<div class="result-summary">${summary}</div>`;
+  }
+
+  if(url){
+    html+=`<div class="download-area">
+      <a class="btn-download" href="${url}" download="${filename}">
+        <span>⬇</span> 下载PPTX (${sizeKb}KB · ${slidesCount}页 · 质量:${quality})
+      </a>
+    </div>`;
+  }
+
+  if(outline.length>0){
+    html+='<div class="outline-grid">';
+    outline.forEach(s=>{
+      html+=`<div class="outline-card"><span class="num">PAGE ${s.num||'?'}</span><br>${s.title||''}</div>`;
+    });
+    html+='</div>';
+  }
+
+  container.innerHTML=html;
+}
+
+function showError(msg){
+  document.getElementById('progress-card').style.display='none';
+  const el=document.getElementById('error-msg');
+  el.textContent='❌ '+msg;
+  el.classList.add('show');
+  setLoading(false);
+}
+
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+type+' show';
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+async function submitTask(){
+  const input=document.getElementById('topic-input');
+  const topic=input.value.trim();
+  if(!topic){showToast('请输入主题','error');return}
+
+  setLoading(true);
+  showProgress();
+  updateProgress(5,'提交任务...');
+  updateStep(0,'running');
+
+  try{
+    const res=await fetch(API+'/workflows',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({task:'生成PPT:'+topic,user_id:'ppt-user',mode:'auto'}),
+    });
+
+    if(!res.ok){
+      const err=await res.text();
+      showError('提交失败: HTTP '+res.status+' - '+err.substring(0,100));
+      return;
+    }
+
+    const data=await res.json();
+    _currentWorkflowId=data.workflow_id;
+    updateProgress(15,'任务已接收，开始执行...');
+
+    if(data.status==='completed'){
+      handleCompletedResult(data);
+    }else{
+      startPolling(_currentWorkflowId);
+    }
+  }catch(e){
+    showError('网络错误: '+e.message);
+  }
+}
+
+function startPolling(wfId){
+  let stepIndex=0;
+  _pollTimer=setInterval(async()=>{
+    try{
+      const res=await fetch(API+'/workflows/'+wfId);
+      if(!res.ok)return;
+      const wf=await res.json();
+
+      if(wf.status==='planning'){
+        updateProgress(20,'拆解任务...');
+      }else if(wf.status==='dispatching'){
+        updateProgress(30,'派发子任务...');
+      }else if(wf.status==='executing'){
+        const pct=30+Math.min(55,Math.floor(Math.random()*15+stepIndex*12));
+        updateProgress(pct,'执行中...');
+        if(stepIndex<STEPS_CONFIG.length){
+          updateStep(stepIndex,'running');
+        }
+        stepIndex=Math.min(STEPS_CONFIG.length-1,stepIndex+1);
+      }else if(wf.status==='aggregating'){
+        updateProgress(90,'聚合结果...');
+        STEPS_CONFIG.forEach((_,i)=>updateStep(i,'done'));
+        updateStep(STEPS_CONFIG.length-1,'running');
+      }else if(wf.status==='completed'){
+        clearInterval(_pollTimer);
+        updateProgress(100,'完成!');
+        STEPS_CONFIG.forEach((_,i)=>updateStep(i,'done'));
+        handleCompletedResult(wf);
+      }else if(wf.status==='failed'){
+        clearInterval(_pollTimer);
+        showError('工作流执行失败: '+(wf.error||'未知错误'));
+      }
+    }catch(e){}
+  },1500);
+}
+
+function handleCompletedResult(wf){
+  const result=wf.result||{};
+  let content=result.content||'';
+  if(typeof content==='string'){
+    try{content=JSON.parse(content)}catch(e){}
+  }
+
+  let finalData={};
+
+  if(result.node_results){
+    for(const [nodeId,nodeResult] of Object.entries(result.node_results)){
+      if(nodeResult.data){
+        Object.assign(finalData,nodeResult.data);
+      }
+      if(nodeResult.content){
+        try{
+          const parsed=typeof nodeResult.content==='string'?JSON.parse(nodeResult.content):nodeResult.content;
+          if(parsed.data)Object.assign(finalData,parsed.data);
+        }catch(e){}
+      }
+    }
+  }
+
+  if(content&&content.data)Object.assign(finalData,content.data);
+
+  if(!finalData.download_url&&finalData.link){
+    finalData.download_url=finalData.link;
+  }
+
+  showResult(finalData);
+  setLoading(false);
+
+  if(finalData.download_url){
+    showToast('PPT生成成功! 点击下载','success');
+  }
+}
+
+document.getElementById('topic-input').addEventListener('keydown',function(e){
+  if(e.key==='Enter')submitTask();
+});
+</script>
+</body>
+</html>

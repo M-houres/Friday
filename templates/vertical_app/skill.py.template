@@ -1,0 +1,129 @@
+"""
+__APP_NAME__ Skill —— 垂直业务应用骨架
+
+替换这三个位置即可把底座装配成你的业务应用:
+1. 调整 trigger / description，让 Planner 能稳定命中这个 Skill
+2. 在 execute_business_flow 中接入你的模型、知识库、外部 API 或内部系统
+3. 在 finalize_output 中整理前端真正需要的结构化结果
+"""
+
+from src.tools.skill import FridaySkill, skill, tool
+
+
+@skill(
+    name="__APP_NAME__",
+    trigger="__APP_TRIGGER__",
+    description="__APP_DESCRIPTION__",
+    version="0.1.0",
+    icon="__APP_ICON__",
+)
+class __APP_CLASS_NAME__(FridaySkill):
+    workflow = [
+        {"id": "intake", "tool": "collect_requirements", "name": "收集需求", "dependencies": []},
+        {"id": "process", "tool": "execute_business_flow", "name": "执行业务流程", "dependencies": ["intake"]},
+        {"id": "deliver", "tool": "finalize_output", "name": "整理交付结果", "dependencies": ["process"]},
+    ]
+
+    output = {
+        "format": "json",
+        "route": "__APP_ROUTE__",
+        "artifact_kind": "__ARTIFACT_KIND__",
+    }
+
+    @tool(
+        name="collect_requirements",
+        description="规范化用户输入，为后续业务流程准备结构化上下文",
+        parameters={"type": "object", "properties": {}, "required": []},
+    )
+    async def collect_requirements(self, task: str = "", context: dict | None = None) -> dict:
+        normalized = self._strip_prefix(task)
+        return {
+            "success": True,
+            "data": {
+                "app_id": "__APP_ID__",
+                "app_name": "__APP_NAME__",
+                "original_task": task,
+                "normalized_input": normalized or task,
+            },
+        }
+
+    @tool(
+        name="execute_business_flow",
+        description="你的业务逻辑主入口：在这里接模型、规则引擎、数据库、外部系统",
+        parameters={"type": "object", "properties": {}, "required": []},
+        depends_on=["collect_requirements"],
+    )
+    async def execute_business_flow(self, task: str = "", context: dict | None = None) -> dict:
+        intake = (context or {}).get("collect_requirements", {}).get("data", {})
+        user_input = intake.get("normalized_input", task)
+
+        findings = [
+            {
+                "title": "替换主流程",
+                "detail": "在 execute_business_flow 中接入你的业务核心逻辑，而不是保留示例返回值。",
+            },
+            {
+                "title": "补齐输出结构",
+                "detail": "把你的领域结果整理到 findings / artifacts / summary 所需字段中。",
+            },
+            {
+                "title": "接入交付物",
+                "detail": "如需文件下载，使用 src.artifacts.service 创建受控 artifact，再把 download_url 暴露给前端。",
+            },
+        ]
+
+        return {
+            "success": True,
+            "data": {
+                "input": user_input,
+                "findings": findings,
+                "artifacts": [],
+                "raw_result": {
+                    "todo": "replace execute_business_flow with business-specific implementation",
+                    "route": "__APP_ROUTE__",
+                    "project_id": "__PROJECT_ID__",
+                },
+            },
+        }
+
+    @tool(
+        name="finalize_output",
+        description="把主流程结果收口成前端页面直接可展示的数据结构",
+        parameters={"type": "object", "properties": {}, "required": []},
+        depends_on=["execute_business_flow"],
+    )
+    async def finalize_output(self, task: str = "", context: dict | None = None) -> dict:
+        business = (context or {}).get("execute_business_flow", {}).get("data", {})
+        findings = business.get("findings", [])
+        artifacts = business.get("artifacts", [])
+        download_url = ""
+        if artifacts:
+            first = artifacts[0] if isinstance(artifacts[0], dict) else {}
+            download_url = first.get("download_url", "")
+
+        highlights = [item.get("title", "") for item in findings if isinstance(item, dict) and item.get("title")]
+
+        return {
+            "success": True,
+            "data": {
+                "app_id": "__APP_ID__",
+                "app_name": "__APP_NAME__",
+                "summary": f"__APP_NAME__ 骨架已执行完成。下一步请把业务逻辑替换到 execute_business_flow 中。",
+                "highlights": highlights,
+                "next_actions": [
+                    "替换 execute_business_flow 的示例实现",
+                    "按你的领域结果修改页面渲染逻辑",
+                    "如需文件交付，新增 artifact 并展示 download_url",
+                ],
+                "download_url": download_url,
+                "structured_result": business,
+            },
+        }
+
+    @staticmethod
+    def _strip_prefix(task: str) -> str:
+        task = task.strip()
+        for prefix in ("__APP_NAME__", "__APP_NAME__：", "__APP_NAME__:"):
+            if task.startswith(prefix):
+                task = task[len(prefix):].strip()
+        return task

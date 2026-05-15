@@ -1,0 +1,73 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: friday-pg
+    environment:
+      POSTGRES_DB: friday
+      POSTGRES_USER: friday
+      POSTGRES_PASSWORD: friday_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./config/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U friday"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: friday-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  app:
+    build: .
+    container_name: friday-app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://friday:friday_secret@postgres:5432/friday
+      REDIS_URL: redis://redis:6379/0
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-sk-your-key}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      DEFAULT_MODEL: ${DEFAULT_MODEL:-deepseek-chat}
+      SANDBOX_TYPE: subprocess
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+      HOST: 0.0.0.0
+      PORT: 8000
+      JIT_ENABLED: "false"
+      SPECULATIVE_ENABLED: "false"
+      FRIDAY_SKILL: ${FRIDAY_SKILL:-all}
+      AUTH_MODE: none
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - app_output:/app/static/output
+      - cold_data:/app/data/cold
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+volumes:
+  pg_data:
+  redis_data:
+  app_output:
+  cold_data:

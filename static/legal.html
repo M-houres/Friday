@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>法务审查 —— AI合同风险分析</title>
+<style>
+:root{
+--bg:#0a0a0f;--surface:#12121a;--border:#1e1e30;--text:#e8e8f0;--muted:#8888a0;
+--primary:#f59e0b;--primary-glow:rgba(245,158,11,.3);--success:#22c55e;--success-bg:rgba(34,197,94,.1);
+--warning:#f59e0b;--error:#ef4444;--error-bg:rgba(239,68,68,.1);
+--high:rgba(239,68,68,.15);--medium:rgba(245,158,11,.15);--low:rgba(34,197,94,.15);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%,rgba(245,158,11,.06),transparent 60%),radial-gradient(ellipse 60% 50% at 80% 80%,rgba(239,68,68,.04),transparent 60%);pointer-events:none;z-index:0}
+.container{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:40px 24px 80px}
+.header{text-align:center;padding:40px 0 20px}
+.logo{font-size:52px;margin-bottom:8px;display:block;filter:drop-shadow(0 0 24px var(--primary-glow))}
+h1{font-size:34px;font-weight:800;letter-spacing:-.5px;background:linear-gradient(135deg,#f59e0b,#ef4444,#f59e0b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% auto;animation:shimmer 3s linear infinite}
+@keyframes shimmer{to{background-position:200% center}}
+.subtitle{color:var(--muted);font-size:15px;margin-top:8px}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:20px;transition:border-color .3s}
+.card:hover{border-color:rgba(245,158,11,.3);box-shadow:0 0 40px rgba(245,158,11,.06)}
+.card-header{font-size:14px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:16px}
+
+textarea.contract-input{width:100%;min-height:200px;background:var(--bg);border:2px solid var(--border);border-radius:12px;padding:16px;color:var(--text);font-size:14px;font-family:inherit;line-height:1.7;resize:vertical;outline:none;transition:border-color .3s}
+textarea.contract-input:focus{border-color:var(--warning);box-shadow:0 0 0 4px rgba(245,158,11,.1)}
+textarea.contract-input::placeholder{color:var(--muted)}
+.char-count{text-align:right;font-size:11px;color:var(--muted);margin-top:4px}
+
+.btn-submit{display:block;width:100%;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .3s}
+.btn-submit:hover{transform:translateY(-1px);box-shadow:0 8px 28px var(--primary-glow)}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+.samples{margin-top:12px;font-size:12px;color:var(--muted)}
+.sample-btn{padding:4px 10px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:12px;color:var(--warning);cursor:pointer;transition:.2s;margin:3px}
+.sample-btn:hover{background:rgba(245,158,11,.2)}
+
+.progress-bar-wrap{height:6px;background:var(--border);border-radius:3px;margin:16px 0;overflow:hidden}
+.progress-bar{height:100%;background:linear-gradient(90deg,#f59e0b,#ef4444);border-radius:3px;transition:width .5s ease}
+.step-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:rgba(30,30,48,.4);border-radius:10px;font-size:13px;margin-bottom:6px}
+.step-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.step-icon.pending{background:rgba(136,136,160,.1);color:var(--muted)}
+.step-icon.running{background:rgba(245,158,11,.15);color:var(--warning);animation:pulse 1.5s ease infinite}
+.step-icon.done{background:var(--success-bg);color:var(--success)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+.result-hidden{display:none}
+.result-summary{padding:20px;border-radius:12px;margin-bottom:16px;font-size:15px;line-height:1.8}
+.result-summary.high{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2)}
+.result-summary.medium{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2)}
+.result-summary.low{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.2)}
+.risk-badge{display:inline-block;padding:4px 12px;border-radius:10px;font-size:12px;font-weight:700;margin-right:8px}
+.risk-badge.high{background:rgba(239,68,68,.2);color:#ef4444}
+.risk-badge.medium{background:rgba(245,158,11,.2);color:#f59e0b}
+.risk-badge.low{background:rgba(34,197,94,.2);color:#22c55e}
+
+.btn-download{display:inline-flex;align-items:center;gap:8px;background:var(--warning);color:#000;border:none;border-radius:12px;padding:14px 36px;font-size:16px;font-weight:700;cursor:pointer;text-decoration:none;transition:.3s}
+.btn-download:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(245,158,11,.3)}
+
+.error-msg{padding:16px 20px;background:var(--error-bg);border:1px solid rgba(239,68,68,.2);border-radius:12px;color:var(--error);font-size:14px;margin-top:16px;display:none}
+.error-msg.show{display:block}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,.2);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;display:inline-block;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.footer{text-align:center;padding:40px 0 20px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <span class="logo">⚖️</span>
+    <h1>法务审查</h1>
+    <p class="subtitle">AI合同风险分析 —— 粘贴合同文本，秒出审查报告</p>
+  </div>
+
+  <div class="card" id="input-card">
+    <div class="card-header">📄 粘贴合同文本</div>
+    <textarea class="contract-input" id="contract-input" placeholder="在此粘贴合同或协议全文...&#10;&#10;支持：劳动合同、买卖合同、租赁合同、服务协议、保密协议(NDA)、合资协议等&#10;&#10;示例格式：&#10;第X条 付款方式&#10;甲方应于...&#10;&#10;第X条 违约责任&#10;如一方违约..." oninput="updateCharCount()"></textarea>
+    <div class="char-count"><span id="char-count">0</span> 字</div>
+    <button class="btn-submit" id="btn-submit" onclick="submitReview()">
+      <span id="btn-text">🔍 开始审查</span>
+      <span class="spinner" id="btn-spinner" style="display:none"></span>
+    </button>
+    <div class="samples">
+      快速体验：
+      <span class="sample-btn" onclick="loadSample('labor')">劳动合同</span>
+      <span class="sample-btn" onclick="loadSample('purchase')">买卖合同</span>
+      <span class="sample-btn" onclick="loadSample('service')">服务协议</span>
+      <span class="sample-btn" onclick="loadSample('nda')">保密协议</span>
+    </div>
+  </div>
+
+  <div class="card" id="progress-card" style="display:none">
+    <div class="card-header">⚡ 审查进度</div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progress-bar" style="width:0%"></div></div>
+    <div id="steps-list"></div>
+  </div>
+
+  <div class="card" id="result-card" style="display:none">
+    <div class="card-header">📊 审查结果</div>
+    <div id="result-content"></div>
+  </div>
+
+  <div class="error-msg" id="error-msg"></div>
+</div>
+
+<div class="footer">Powered by <strong style="color:#f59e0b">星期五</strong> AI Agent Framework v1.0</div>
+
+<script>
+const API='/api/v1';
+const STEPS=[
+  {id:'parse_doc',name:'📄 文档解析',desc:'提取合同基本信息'},
+  {id:'extract',name:'🔍 条款提取',desc:'识别关键条款'},
+  {id:'review',name:'⚡ 并行审查',desc:'逐条风险评估'},
+  {id:'compliance',name:'📋 合规检查',desc:'整体合规分析'},
+  {id:'report',name:'📝 生成报告',desc:'撰写审查报告'},
+  {id:'deliver',name:'📦 交付报告',desc:'准备下载'},
+];
+
+const SAMPLES={
+  labor:`劳动合同
+
+甲方（用人单位）：某某科技有限公司
+乙方（劳动者）：张三
+
+第一条 合同期限
+本合同期限为3年，自2025年1月1日起至2027年12月31日止。试用期6个月。
+
+第二条 工作内容
+乙方从事软件开发工程师岗位工作。甲方可根据经营需要调整乙方工作岗位，乙方应服从安排。
+
+第三条 薪酬
+月薪20000元，每月15日发放。试用期工资按80%发放，即16000元。加班费包含在月薪中，不再另行支付。
+
+第四条 竞业限制
+乙方离职后3年内不得从事与甲方有竞争关系的业务。竞业限制补偿金为每月1000元。
+
+第五条 保密义务
+乙方对工作中接触的甲方商业秘密负有永久保密义务。
+
+第六条 违约责任
+乙方违反本合同任何条款，应向甲方支付违约金50万元。
+
+甲方签章：某某科技有限公司
+乙方签字：张三
+日期：2025年1月1日`,
+
+  purchase:`买卖合同
+
+甲方（卖方）：某设备制造有限公司
+乙方（买方）：某贸易公司
+
+第一条 货物
+甲方向乙方出售工业机器人20台，型号IR-2000。
+
+第二条 价款
+总价款人民币500万元。乙方于签约后3日内支付全款。
+
+第三条 交付
+甲方收到全款后60日内交付货物。交付地点为甲方工厂。
+
+第四条 验收
+乙方应在收货后24小时内完成验收。逾期未提出异议视为验收合格。
+
+第五条 质量保证
+甲方对货物提供3个月质量保证期，自交付之日起算。质保期满后，甲方不再承担任何责任。
+
+第六条 违约责任
+乙方逾期付款，每日按未付金额的1%支付违约金。甲方逾期交货，每日按已付金额的0.01%支付违约金。`,
+
+  service:`技术服务协议
+
+甲方（委托方）：某互联网公司
+乙方（服务方）：某云计算公司
+
+第一条 服务内容
+乙方为甲方提供云服务器托管及运维服务。
+
+第二条 服务期限
+本协议有效期一年，自签订之日起算。到期自动续约一年，任何一方提前30日书面通知可终止。
+
+第三条 服务费用
+月服务费10万元，按季度预付。
+
+第四条 数据安全
+乙方应采取合理措施保障甲方数据安全。但乙方不对任何数据丢失、泄露或损坏承担责任。
+
+第五条 知识产权
+甲方使用乙方服务过程中产生的所有数据、代码和成果，知识产权归乙方所有。
+
+第六条 争议解决
+因本协议产生的争议，双方应友好协商。协商不成的，提交乙方所在地人民法院管辖。`,
+
+  nda:`保密协议
+
+甲方：某生物科技公司
+乙方：某投资机构
+
+第一条 保密信息范围
+乙方在尽职调查过程中接触到的甲方一切信息均为保密信息，包括但不限于：技术资料、财务数据、客户名单、商业计划、员工信息等。
+
+第二条 保密期限
+乙方的保密义务为永久，无论本协议是否终止。
+
+第三条 使用限制
+乙方不得将保密信息用于除评估投资机会之外的任何目的。乙方不得对保密信息进行任何形式的复制、记录或留存。
+
+第四条 违约责任
+乙方违反本协议任何条款，应向甲方支付违约金人民币500万元，并赔偿甲方全部损失。
+
+第五条 管辖
+本协议适用中国法律。争议由甲方所在地法院管辖。`
+};
+
+function loadSample(type){
+  document.getElementById('contract-input').value=SAMPLES[type]||'';
+  updateCharCount();
+}
+
+function updateCharCount(){
+  document.getElementById('char-count').textContent=document.getElementById('contract-input').value.length;
+}
+
+function setLoading(l){
+  const b=document.getElementById('btn-submit');
+  b.disabled=l;
+  document.getElementById('btn-text').style.display=l?'none':'inline';
+  document.getElementById('btn-spinner').style.display=l?'inline-block':'none';
+}
+
+function showProgress(){
+  document.getElementById('progress-card').style.display='block';
+  document.getElementById('result-card').style.display='none';
+  document.getElementById('error-msg').classList.remove('show');
+  document.getElementById('steps-list').innerHTML=STEPS.map(s=>
+    `<div class="step-item" id="step-${s.id}">
+      <span class="step-icon pending" id="icon-${s.id}">○</span>
+      <span>${s.name}</span>
+      <span style="flex:1"></span>
+      <span style="font-size:11px;color:var(--muted)" id="status-${s.id}">${s.desc}</span>
+    </div>`
+  ).join('');
+}
+
+function updateStep(idx,state){
+  const s=STEPS[idx];if(!s)return;
+  const i=document.getElementById('icon-'+s.id);
+  const st=document.getElementById('status-'+s.id);
+  if(!i||!st)return;
+  i.className='step-icon '+state;
+  if(state==='running'){i.textContent='◉';st.textContent='执行中...'}
+  else if(state==='done'){i.textContent='✔';st.textContent='完成'}
+  else if(state==='error'){i.textContent='✕';st.textContent='失败'}
+}
+
+function showResult(data){
+  document.getElementById('progress-card').style.display='none';
+  document.getElementById('result-card').style.display='block';
+  const el=document.getElementById('result-content');
+
+  const rl=data.risk_level||'medium';
+  const rs=data.risk_score||50;
+  const icon={'high':'🔴','medium':'🟡','low':'🟢'}[rl]||'';
+  const label={'high':'高风险','medium':'中风险','low':'低风险'}[rl]||rl;
+
+  let h=`<div class="result-summary ${rl}">
+    <p style="font-size:20px;font-weight:700;margin-bottom:8px">${icon} ${data.contract_type||'合同'}审查完成</p>
+    <p>综合风险评分: <span class="risk-badge ${rl}">${rs}/100 · ${label}</span></p>
+    <p style="margin-top:8px;white-space:pre-line">${data.summary||''}</p>
+  </div>`;
+
+  if(data.download_url){
+    h+=`<div style="text-align:center;margin-top:12px">
+      <a class="btn-download" href="${data.download_url}" download="${data.filename||'report.md'}">
+        ⬇ 下载完整审查报告
+      </a>
+    </div>`;
+  }
+  el.innerHTML=h;
+}
+
+function showError(m){
+  document.getElementById('progress-card').style.display='none';
+  document.getElementById('result-card').style.display='none';
+  const el=document.getElementById('error-msg');
+  el.textContent='❌ '+m;el.classList.add('show');
+  setLoading(false);
+}
+
+async function submitReview(){
+  const text=document.getElementById('contract-input').value.trim();
+  if(!text||text.length<50){showError('请粘贴至少50字的合同文本');return}
+
+  setLoading(true);
+  showProgress();
+  document.getElementById('progress-bar').style.width='10%';
+  updateStep(0,'running');
+
+  try{
+    const res=await fetch(API+'/workflows',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({task:text,user_id:'legal-user',mode:'auto'}),
+    });
+    if(!res.ok){showError('提交失败: HTTP '+res.status);return}
+    const wf=await res.json();
+    document.getElementById('progress-bar').style.width='20%';
+
+    if(wf.status==='completed'){handleResult(wf);return}
+
+    let si=0;
+    const t=setInterval(async()=>{
+      try{
+        const r=await fetch(API+'/workflows/'+wf.workflow_id);
+        if(!r.ok)return;
+        const d=await r.json();
+        const pct=20+Math.min(75,si*14);
+        document.getElementById('progress-bar').style.width=pct+'%';
+        if(si<STEPS.length)updateStep(si,'running');
+        si=Math.min(STEPS.length-1,si+1);
+
+        if(d.status==='completed'){
+          clearInterval(t);
+          document.getElementById('progress-bar').style.width='100%';
+          STEPS.forEach((_,i)=>updateStep(i,'done'));
+          handleResult(d);
+        }else if(d.status==='failed'){
+          clearInterval(t);
+          showError('审查失败: '+(d.error||''));
+        }
+      }catch(e){}
+    },1500);
+  }catch(e){showError('网络错误: '+e.message)}
+}
+
+function handleResult(wf){
+  const result=wf.result||{};
+  let content=result.content||'';
+  let finalData={};
+
+  if(result.node_results){
+    for(const r of Object.values(result.node_results)){
+      if(r.data)Object.assign(finalData,r.data);
+    }
+  }
+
+  if(!finalData.download_url&&!finalData.risk_level){
+    if(content&&content.data)Object.assign(finalData,content.data);
+  }
+
+  showResult(finalData);
+  setLoading(false);
+}
+
+document.getElementById('contract-input').addEventListener('keydown',function(e){
+  if(e.ctrlKey&&e.key==='Enter')submitReview();
+});
+</script>
+</body>
+</html>

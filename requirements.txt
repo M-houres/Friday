@@ -1,0 +1,26 @@
+# Core
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.6.0
+pydantic-settings>=2.1.0
+
+# Database
+asyncpg>=0.29.0
+sqlalchemy[asyncio]>=2.0.25
+alembic>=1.13.0
+
+# Cache
+redis>=5.0.0
+
+# LLM Clients
+httpx>=0.26.0
+
+# Docker Sandbox (optional)
+aiodocker>=0.21.0
+
+# PPT Generation
+python-pptx>=0.6.21
+
+# Dev
+pytest>=8.0.0
+pytest-asyncio>=0.23.0

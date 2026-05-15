@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>法务汇报包</title>
+<style>
+:root{
+--bg:#f7f2ea;--ink:#1c241e;--muted:#68776a;--surface:rgba(255,255,255,.82);--line:rgba(28,36,30,.1);
+--accent:#8b5cf6;--accent2:#0f766e;--warn:#d97706;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"IBM Plex Sans","PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);min-height:100vh;
+background:
+radial-gradient(circle at top left,rgba(139,92,246,.14),transparent 28%),
+radial-gradient(circle at bottom right,rgba(15,118,110,.12),transparent 30%),
+linear-gradient(180deg,#f8f3ec 0%,#f0e8dc 100%)}
+.shell{max-width:1100px;margin:0 auto;padding:40px 24px 70px}
+.hero,.workspace{display:grid;grid-template-columns:1.18fr .82fr;gap:20px}
+.workspace{margin-top:20px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:26px;backdrop-filter:blur(14px);box-shadow:0 20px 80px rgba(28,36,30,.08)}
+.hero-main,.hero-side,.input-card,.result-card{padding:28px}
+.eyebrow{display:inline-flex;gap:10px;align-items:center;padding:9px 14px;border-radius:999px;background:rgba(139,92,246,.1);color:var(--accent);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+h1{margin:16px 0 10px;font-size:clamp(34px,5vw,58px);line-height:1.03;letter-spacing:-.05em}
+.subtitle{margin:0;color:var(--muted);font-size:16px;line-height:1.8}
+.hero-side{background:linear-gradient(145deg,#17112b,#311c68);color:#efe9ff}
+.hero-side h2{margin:0 0 12px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;opacity:.84}
+.hero-side ul{margin:0;padding-left:18px;line-height:1.9;font-size:14px}
+.section-title{margin:0 0 14px;font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+textarea{width:100%;min-height:250px;border-radius:18px;border:1px solid rgba(28,36,30,.12);padding:18px;background:rgba(255,255,255,.88);font:inherit;line-height:1.75;resize:vertical;outline:none}
+textarea:focus{border-color:rgba(139,92,246,.45);box-shadow:0 0 0 5px rgba(139,92,246,.1)}
+.actions{display:flex;gap:12px;align-items:center;margin-top:16px}
+.btn{border:none;border-radius:16px;padding:14px 20px;font:inherit;font-weight:700;cursor:pointer}
+.btn-primary{background:linear-gradient(135deg,var(--accent),#6d28d9);color:#fff}
+.btn-secondary{background:rgba(28,36,30,.06);color:var(--ink)}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+.status{margin-top:12px;font-size:13px;color:var(--muted)}
+.error{display:none;margin-top:14px;padding:14px 16px;border-radius:16px;background:rgba(185,28,28,.08);border:1px solid rgba(185,28,28,.14);color:#b91c1c}
+.error.show{display:block}
+.result-card{display:grid;gap:18px}
+.result-shell{display:none}
+.result-shell.show{display:grid;gap:18px}
+.summary{padding:18px 20px;border-radius:18px;background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.16);line-height:1.75}
+.step-list{display:grid;gap:12px}
+.step-item{padding:14px 16px;border-radius:18px;background:rgba(255,255,255,.74);border:1px solid rgba(28,36,30,.08)}
+.step-item h3{margin:0 0 6px;font-size:15px}
+.step-item p{margin:0;color:var(--muted);font-size:13px;line-height:1.7;white-space:pre-wrap}
+.download-list{display:flex;flex-wrap:wrap;gap:12px}
+.download{display:inline-flex;align-items:center;gap:8px;padding:12px 16px;border-radius:14px;background:rgba(15,118,110,.12);color:#0f5e59;text-decoration:none;font-weight:700}
+.raw{padding:16px;border-radius:16px;background:#1d2330;color:#eaf2ff;font-family:Consolas,monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;overflow:auto;max-height:260px}
+@media (max-width:960px){
+  .hero,.workspace{grid-template-columns:1fr}
+  .shell{padding:24px 16px 42px}
+  .hero-main,.hero-side,.input-card,.result-card{padding:22px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <section class="hero">
+    <div class="panel hero-main">
+      <div class="eyebrow">Multi-Skill Scenario</div>
+      <h1>法务汇报包</h1>
+      <p class="subtitle">这个页面不是单 Skill 页面，而是一个产品场景：先做合同法务审查，再把审查结论整理成管理层汇报PPT。页面只提一次任务，后端自动串两段 Skill。</p>
+    </div>
+    <aside class="panel hero-side">
+      <h2>场景步骤</h2>
+      <ul>
+        <li>步骤1：法务审查</li>
+        <li>步骤2：根据审查结果生成PPT</li>
+        <li>统一返回：摘要、步骤结果、下载入口</li>
+      </ul>
+    </aside>
+  </section>
+
+  <section class="workspace">
+    <div class="panel input-card">
+      <h2 class="section-title">输入合同文本</h2>
+      <textarea id="contract-input" placeholder="粘贴合同、协议、采购条款或合作协议内容。提交后，后端会先做法务审查，再自动生成一份汇报PPT。"></textarea>
+      <div class="actions">
+        <button id="submit-btn" class="btn btn-primary" onclick="submitScenario()">生成汇报包</button>
+        <button class="btn btn-secondary" onclick="fillSample()">填充示例</button>
+      </div>
+      <div id="status" class="status">这个页面调用的是产品场景，不是单独某个 Skill。</div>
+      <div id="error" class="error"></div>
+    </div>
+
+    <div class="panel result-card">
+      <h2 class="section-title">场景结果</h2>
+      <div id="result" class="result-shell">
+        <div id="summary" class="summary"></div>
+        <div>
+          <h2 class="section-title">步骤执行结果</h2>
+          <div id="steps" class="step-list"></div>
+        </div>
+        <div>
+          <h2 class="section-title">下载入口</h2>
+          <div id="downloads" class="download-list"></div>
+        </div>
+        <div>
+          <h2 class="section-title">原始返回</h2>
+          <pre id="raw" class="raw"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const API='/api/v1';
+
+function fillSample(){
+  document.getElementById('contract-input').value=`采购合同\n\n甲方：某科技公司\n乙方：某设备供应商\n\n第一条 付款方式\n甲方应在合同签订后3日内支付全款。\n\n第二条 违约责任\n乙方逾期交货每日按合同总额0.01%支付违约金，甲方逾期付款每日按合同总额1%支付违约金。\n\n第三条 争议解决\n双方同意由乙方所在地法院专属管辖。`;
+}
+
+function setLoading(loading){
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=loading;
+  btn.textContent=loading?'处理中...':'生成汇报包';
+}
+
+function setStatus(text){document.getElementById('status').textContent=text}
+function setError(text){
+  const el=document.getElementById('error');
+  el.textContent=text;
+  el.classList.toggle('show',Boolean(text));
+}
+
+function renderResult(data){
+  const shell=document.getElementById('result');
+  const payload=((data||{}).result||{}).final_output?.data||{};
+  document.getElementById('summary').textContent=payload.summary||'场景执行完成。';
+
+  const stepsWrap=document.getElementById('steps');
+  stepsWrap.innerHTML='';
+  (payload.steps||[]).forEach(step=>{
+    const output=step.output||{};
+    const card=document.createElement('div');
+    card.className='step-item';
+    card.innerHTML=`<h3>${step.name} · ${step.skill}</h3><p>${output.summary||JSON.stringify(output,null,2)}</p>`;
+    stepsWrap.appendChild(card);
+  });
+
+  const downloadWrap=document.getElementById('downloads');
+  downloadWrap.innerHTML='';
+  (payload.downloads||[]).forEach(item=>{
+    const a=document.createElement('a');
+    a.className='download';
+    a.href=item.download_url;
+    a.textContent=(item.filename||item.skill||'下载');
+    downloadWrap.appendChild(a);
+  });
+
+  document.getElementById('raw').textContent=JSON.stringify(data,null,2);
+  shell.classList.add('show');
+}
+
+async function submitScenario(){
+  const task=document.getElementById('contract-input').value.trim();
+  if(!task){
+    setError('请输入合同文本。');
+    return;
+  }
+
+  setError('');
+  setLoading(true);
+  setStatus('正在执行页面场景：法务审查 → 汇报PPT...');
+  try{
+    const res=await fetch(API+'/workflows',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        task,
+        user_id:'legal-briefing-demo',
+        project_id:'default',
+        page_id:'legal-briefing',
+        mode:'auto'
+      })
+    });
+    const data=await res.json();
+    if(!res.ok){
+      throw new Error(data.detail||data.message||('HTTP '+res.status));
+    }
+    renderResult(data);
+    setStatus('执行完成，已按页面场景串行调用多个 Skill。');
+  }catch(error){
+    setError('执行失败：'+error.message);
+    setStatus('执行失败，请检查后端依赖和模型配置。');
+  }finally{
+    setLoading(false);
+  }
+}
+</script>
+</body>
+</html>
